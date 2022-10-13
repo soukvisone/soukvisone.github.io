@@ -76,12 +76,13 @@ body {
 span {
     color: #2bd6b4;
 }
-.h1 {
+h1 {
     text-shadow: red -2px 0,
                  cyan 2px 0;
     text-align: center;
 }
 p {
+    font-size: 15px;
     color: #ff91af;
     text-align: center;
 }
