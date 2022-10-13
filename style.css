@@ -71,12 +71,17 @@ nav .start-home, a:nth-child(5):hover~.animation {
 body {
     font-size: 12px;
     font-family: sans-serif;
-    background: #2c3e50;
+    background: #white;
 }
 span {
     color: #2bd6b4;
 }
-h1 {
+.h1 {
     text-shadow: red -2px 0,
                  cyan 2px 0;
+    text-align: center;
+}
+p {
+    color: #ff91af;
+    text-align: center;
 }
