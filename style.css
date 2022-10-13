@@ -76,3 +76,7 @@ body {
 span {
     color: #2bd6b4;
 }
+h1 {
+    text-shadow: red -2px 0,
+                 cyan 2px 0;
+}
