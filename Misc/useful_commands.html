@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Useful Commands · Personal Notes</title>
+<meta name="description" content="QR / เสียง / SQLite / evtx / pcap / จัดการไฟล์">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub active" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🧰 Misc / <b>Useful Commands</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#zbarimg">zbarimg</a><a href="../tools.html#sox">sox</a><a href="../tools.html#ffmpeg">ffmpeg</a><a href="../tools.html#multimon-ng">multimon-ng</a><a href="../tools.html#sqlite3">sqlite3</a><a href="../tools.html#jq">jq</a><a href="../tools.html#imagemagick">ImageMagick</a><a href="../tools.html#steghide">steghide</a><a href="../tools.html#stegseek">stegseek</a><a href="../tools.html#zsteg">zsteg</a><a href="../tools.html#chainsaw">chainsaw</a><a href="../tools.html#tshark">tshark</a></div>
+<h1 id="misc-useful-commands">Misc — Useful Commands (รวมคำสั่งที่ใช้บ่อยนอกหมวดอื่น)</h1>
+<blockquote>
+<p>ใช้เมื่อ: โจทย์ไม่เข้าหมวดไหนเลย (ไฟล์แปลก, เสียง, QR, ฐานข้อมูล, log, การจัดการไฟล์)
+เครื่องมือ: <code>file</code>, <code>strings</code>, <code>binwalk</code>, <code>zbarimg</code>, <code>sox</code>, <code>ffmpeg</code>, <code>multimon-ng</code>, <code>sqlite3</code>, <code>jq</code>, <code>git</code>, <code>ImageMagick</code>, <code>7z</code>, <code>unzip</code>, <code>steghide</code>, <code>stegseek</code>, <code>stegsolve</code>, <code>OpenStego</code>, <code>stegsnow</code></p>
+</blockquote>
+<hr />
+<h2 id="1-flag">1) ไล่หา flag ทั้งเครื่อง/ทั้งโฟลเดอร์</h2>
+<pre><code class="language-bash"># grep ตรง ๆ (รวมไฟล์ไบนารี)
+grep -a -r -o 'CSG_FLAG{[^}]*}' . 2&gt;/dev/null | sort -u
+
+# ripgrep (เร็วกว่า)
+rg -a -o 'CSG_FLAG\{[^}]*\}' . | sort -u
+
+# ใน strings ของทุกไฟล์
+find . -type f -exec strings -n 6 {} + 2&gt;/dev/null | grep -o 'CSG_FLAG{[^}]*}' | sort -u
+
+# ในไฟล์ที่ถูก base64
+for f in $(find . -type f); do
+  strings -n 20 &quot;$f&quot; | grep -E '^[A-Za-z0-9+/]{20,}={0,2}$' | while read -r b; do
+    printf '%s' &quot;$b&quot; | base64 -d 2&gt;/dev/null | grep -q 'CSG_FLAG' &amp;&amp; echo &quot;[$f] $b&quot;
+  done
+done
+</code></pre>
+<p>สคริปต์สำเร็จรูป: <code>bash scripts/flag_hunt.sh .</code></p>
+<hr />
+<h2 id="2-qr-code">2) QR code / บาร์โค้ด</h2>
+<pre><code class="language-bash">zbarimg qr.png                    # อ่านทั้งหมด
+zbarimg -q --raw qr.png           # เอาแค่ข้อความ
+zbarimg -q --raw *.png            # หลายไฟล์
+
+# ถ้าอ่านไม่ได้ ให้ขยายก่อน
+convert qr.png -resize 400% qr_big.png &amp;&amp; zbarimg -q --raw qr_big.png
+
+# ถ้าเป็น QR ที่ถูกแบ่ง/บิด
+convert qr.png -rotate 90 qr_r90.png &amp;&amp; zbarimg -q --raw qr_r90.png
+</code></pre>
+<blockquote>
+<p>เนื้อหาใน QR มักเป็น base64/hex อีกชั้น → <code>echo '&lt;ข้อความ&gt;' | base64 -d</code></p>
+</blockquote>
+<hr />
+<h2 id="3-spectrogram-dtmf-sstv">3) ไฟล์เสียง — หา spectrogram / DTMF / SSTV</h2>
+<h3 id="31-spectrogram">3.1 สร้าง spectrogram (เทคนิคที่ออกบ่อยสุด)</h3>
+<pre><code class="language-bash">sox sound.wav -n spectrogram -o spec.png -x 2000 -y 1025
+sox sound.wav -n spectrogram -o spec_wide.png -x 4000 -y 513
+sox sound.wav -n spectrogram -o spec_tall.png -x 1200 -y 2049 -z 120
+</code></pre>
+<p>เปิด <code>spec.png</code> ดูด้วยตา — ข้อความมักเขียนด้วยคลื่นเสียง</p>
+<p><strong>จาก writeup 2025 — LINE to PLAIN / Cat Tail (Stegano)</strong>
+โจทย์แนวเสียงจะซ่อนข้อความใน spectrogram หรือซ่อนเป็น LSB ของไฟล์ wav</p>
+<pre><code class="language-bash"># ดู LSB ของ wav
+python3 - &lt;&lt;'PY'
+import wave
+w = wave.open(&quot;sound.wav&quot;)
+data = w.readframes(w.getnframes())
+bits = &quot;&quot;.join(str(b &amp; 1) for b in data[:8000])
+print(&quot;&quot;.join(chr(int(bits[i:i+8], 2)) for i in range(0, len(bits), 8)))
+PY
+</code></pre>
+<h3 id="32-dtmf">3.2 DTMF (เสียงกดปุ่มโทรศัพท์)</h3>
+<pre><code class="language-bash">multimon-ng -t wav -a DTMF sound.wav
+# ได้ตัวเลข -&gt; อาจเป็นรหัสผ่านของไฟล์อื่น
+</code></pre>
+<h3 id="33-sstv-otradio">3.3 SSTV (ภาพที่ส่งทางวิทยุ — โจทย์สาย OT/radio)</h3>
+<pre><code class="language-bash"># เปิด GUI
+qsstv
+# หรือ decode ด้วย command line
+sstv -d sound.wav -o out.png
+</code></pre>
+<h3 id="34">3.4 ฟังย้อนกลับ / เร่งความเร็ว / เปลี่ยนความถี่</h3>
+<pre><code class="language-bash">sox sound.wav reversed.wav reverse
+sox sound.wav fast.wav speed 2.0
+sox sound.wav slow.wav speed 0.5
+sox sound.wav shifted.wav pitch 400
+</code></pre>
+<h3 id="35">3.5 ข้อมูลเสียงพื้นฐาน</h3>
+<pre><code class="language-bash">sox --i sound.wav
+ffprobe sound.mp3
+mediainfo sound.mp3
+</code></pre>
+<hr />
+<h2 id="4">4) รูปภาพ — ต่อจิ๊กซอว์ / รวมภาพ</h2>
+<p><strong>จาก writeup 2025 — C2: Plato (Crypto)</strong> มีรูป 12 ชิ้น (4×3) ต้องต่อเป็นภาพเดียว</p>
+<pre><code class="language-bash"># ต่อเป็นแถว (แนวนอน)
+convert tile1.jpg tile2.jpg tile3.jpg tile4.jpg +append row1.png
+
+# ต่อแนวตั้ง
+convert row1.png row2.png row3.png -append full.png
+
+# หรือทำทีเดียวทั้ง 12 (สมมติชื่อ 01.jpg ... 12.jpg เรียงถูกแล้ว)
+montage 01.jpg 02.jpg 03.jpg 04.jpg 05.jpg 06.jpg \
+        07.jpg 08.jpg 09.jpg 10.jpg 11.jpg 12.jpg \
+        -tile 4x3 -geometry +0+0 full.png
+</code></pre>
+<p>ถ้าต้องเรียงเอง ให้ใช้ <code>montage -tile 4x3</code> แล้วสลับชื่อไฟล์ตามลำดับที่ถูก</p>
+<pre><code class="language-bash"># ดูขนาดรูปทั้งหมด (ต้องเท่ากันก่อนต่อ)
+identify *.jpg | awk '{print $3}' | sort | uniq -c
+</code></pre>
+<hr />
+<h2 id="5-steganography">5) Steganography ในรูป — คำสั่งครบชุด</h2>
+<pre><code class="language-bash"># zsteg (PNG/BMP)
+zsteg -a image.png | head -40
+zsteg -E 'b1,rgb,lsb,xy' image.png &gt; lsb.bin     # ดึงบิตออกมา
+
+# steghide (JPEG/BMP/WAV)
+steghide info image.jpg
+steghide extract -sf image.jpg -p ''             # รหัสว่าง
+steghide extract -sf image.jpg -p 'password' -f
+
+# stegseek (ไล่รหัส steghide ด้วย wordlist — เร็วมาก)
+stegseek image.jpg /usr/share/wordlists/rockyou.txt
+
+# OpenStego (GUI/CLI)
+openstego extract -sf image.png -xd out/
+
+# stegsnow (ข้อความในช่องว่างของ text)
+stegsnow -C secret.txt
+
+# StegSolve (GUI) — ไล่ดู bit plane ด้วยตา
+stegsolve
+</code></pre>
+<p><strong>LSB ด้วย Python (เมื่อ tool ไม่พอ):</strong></p>
+<pre><code class="language-python">from PIL import Image
+img = Image.open(&quot;image.png&quot;).convert(&quot;RGB&quot;)
+bits = [str(p[i] &amp; 1) for p in img.getdata() for i in range(3)]
+s = &quot;&quot;.join(chr(int(&quot;&quot;.join(bits[i:i+8]), 2)) for i in range(0, len(bits) - 8, 8))
+print(s[:500])
+</code></pre>
+<hr />
+<h2 id="6-sqlite">6) ฐานข้อมูล SQLite</h2>
+<pre><code class="language-bash">file data.db
+sqlite3 data.db &quot;.tables&quot;
+sqlite3 data.db &quot;.schema&quot;
+sqlite3 data.db &quot;SELECT * FROM users LIMIT 10;&quot;
+sqlite3 data.db &quot;.dump&quot; | grep -i csg
+sqlite3 data.db &quot;SELECT name FROM sqlite_master WHERE type='table';&quot;
+</code></pre>
+<p>ถ้าไฟล์เสีย/ถูกลบ → <code>fqlite</code> (กู้ record ที่ถูกลบ)</p>
+<pre><code class="language-bash">fqlite data.db
+</code></pre>
+<hr />
+<h2 id="7-log-event-windows">7) Log / Event (Windows)</h2>
+<pre><code class="language-bash"># evtx -&gt; ข้อความ
+chainsaw dump Security.evtx &gt; sec.txt
+hayabusa csv-timber -f Security.evtx -o out.csv --no-wizard
+
+# ค้น event ที่สำคัญ
+grep -E '4624|4625|4688|7045|1102|4720' sec.txt | head -30
+</code></pre>
+<p>ความหมาย Event ID ที่ต้องจำ:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>หมายถึง</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4624</td>
+<td>login สำเร็จ</td>
+</tr>
+<tr>
+<td>4625</td>
+<td>login ผิด</td>
+</tr>
+<tr>
+<td>4672</td>
+<td>ให้สิทธิ์ admin</td>
+</tr>
+<tr>
+<td>4688</td>
+<td>มีการรันโปรเซส (มี command line)</td>
+</tr>
+<tr>
+<td>4720</td>
+<td>สร้าง user ใหม่</td>
+</tr>
+<tr>
+<td>7045</td>
+<td>ติดตั้ง service ใหม่</td>
+</tr>
+<tr>
+<td>1102</td>
+<td>ล้าง log (น่าสงสัยสุด)</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="8-pcap-wireshark">8) pcap แบบเร็ว (ไม่ต้องเปิด Wireshark)</h2>
+<pre><code class="language-bash">tshark -r capture.pcap -q -z io,phs                  # protocol ทั้งหมด
+tshark -r capture.pcap -q -z conv,tcp                # ใครคุยกับใคร
+tshark -r capture.pcap -Y http.request -T fields \
+       -e http.host -e http.request.uri              # URL ที่ถูกขอ
+tshark -r capture.pcap -Y dns -T fields -e dns.qry.name | sort -u
+tshark -r capture.pcap --export-objects http,out/ -q # ดึงไฟล์ที่โหลด
+tshark -r capture.pcap -Y 'frame contains &quot;CSG_FLAG&quot;' -T fields -e frame.number
+</code></pre>
+<p><strong>จาก writeup 2025 — N2: Silent Call / N3: Silent Signals</strong>
+โจทย์แนว VoIP/RTP: ดึงเสียงออกมาจาก pcap แล้วฟัง/ทำ spectrogram</p>
+<pre><code class="language-bash">tshark -r call.pcap -Y rtp -T fields -e rtp.payload &gt; rtp.hex
+# หรือใช้ rtptools
+rtpdump -F payload -f call.pcap &gt; audio.raw
+</code></pre>
+<hr />
+<h2 id="9">9) ข้อความ/เข้ารหัสพื้นฐานในเชลล์</h2>
+<pre><code class="language-bash">echo 'SGVsbG8=' | base64 -d
+echo -n 'Hello' | base64
+echo '48656c6c6f' | xxd -r -p
+echo -n 'Hello' | xxd -p
+echo 'uryyb' | tr 'A-Za-z' 'N-ZA-Mn-za-m'          # rot13
+rev &lt;&lt;&lt; 'olleh'                                     # กลับด้าน
+printf '%b' '\x43\x53\x47'                          # \x escape
+python3 -c &quot;print(ord('C'), hex(ord('C')), bin(ord('C')))&quot;
+</code></pre>
+<hr />
+<h2 id="10-json-jq">10) JSON / jq</h2>
+<pre><code class="language-bash">curl -s http://target/api | jq
+curl -s http://target/api | jq '.users[] | .name'
+cat data.json | jq -r '.. | strings' | grep -i csg
+</code></pre>
+<hr />
+<h2 id="11">11) ไฟล์บีบอัด (สรุปเร็ว)</h2>
+<pre><code class="language-bash">unzip -l file.zip           # ดูข้างใน
+unzip -P 'pass' file.zip    # แตกด้วยรหัส
+7z x file.7z -oout/         # 7z
+tar -tvf file.tar           # ดูข้างใน tar
+tar -xf file.tar -C out/    # แตก tar
+gunzip -c file.gz &gt; out     # gz
+</code></pre>
+<p>รายละเอียดการ crack รหัส → <code>../Forensics/binwalk_commands.md</code></p>
+<hr />
+<h2 id="12">12) เคล็ดลับการทำงาน</h2>
+<pre><code class="language-bash"># ทำงานในโฟลเดอร์แยก ไม่ให้รก
+mkdir -p work &amp;&amp; cd work
+
+# บันทึกทุกอย่างที่ทำ
+script -a session.log
+
+# ดูขนาดไฟล์ทั้งหมดเรียงจากใหญ่
+du -ah . | sort -rh | head -20
+
+# หาไฟล์ที่เพิ่งถูกแก้ (อาจเป็นไฟล์ที่โจทย์เพิ่งสร้าง)
+find . -type f -newermt '-1 hour'
+
+# คัดลอกไฟล์ผ่าน HTTP (ส่งออกจากเครื่องเป้าหมาย)
+python3 -m http.server 8000
+wget http://YOUR_IP:8000/file
+</code></pre>
+<hr />
+<h2 id="13">13) ตาราง "โจทย์ให้อะไร → ใช้คำสั่งไหน"</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>โจทย์ให้</th>
+<th>เริ่มที่</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>รูป QR</td>
+<td><code>zbarimg -q --raw qr.png</code></td>
+</tr>
+<tr>
+<td>ไฟล์เสียง</td>
+<td><code>sox ... spectrogram</code> + <code>multimon-ng -a DTMF</code></td>
+</tr>
+<tr>
+<td>รูปหลายชิ้น</td>
+<td><code>montage -tile 4x3</code></td>
+</tr>
+<tr>
+<td>รูปปกติ</td>
+<td><code>zsteg -a</code> + <code>steghide</code> + <code>stegseek</code></td>
+</tr>
+<tr>
+<td>ไฟล์ .db</td>
+<td><code>sqlite3</code> + <code>fqlite</code></td>
+</tr>
+<tr>
+<td>ไฟล์ .evtx</td>
+<td><code>chainsaw dump</code></td>
+</tr>
+<tr>
+<td>ไฟล์ .pcap</td>
+<td><code>tshark -z io,phs</code> แล้วค่อยเจาะ</td>
+</tr>
+<tr>
+<td>ข้อความยาว ๆ</td>
+<td><code>base64 -d</code> / <code>../Crypto/crypto_cheatsheet.md</code></td>
+</tr>
+<tr>
+<td>ไม่รู้อะไรเลย</td>
+<td><code>grep -a -r -o 'CSG_FLAG{[^}]*}' .</code></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="14">14) กฎความปลอดภัย</h2>
+<ul>
+<li>อย่ารันไฟล์ที่สงสัยว่าเป็นมัลแวร์บนเครื่องตัวเอง — ใช้ <code>strings</code>/<code>capa</code>/sandbox แทน</li>
+<li>อย่าอัปโหลดไฟล์โจทย์ขึ้นบริการออนไลน์ (ผิดกติกา)</li>
+<li>ถ้าต้องรัน binary แปลก ๆ ให้รันใน VM/WSL ที่แยกออกมา</li>
+</ul>
+<div class="pager"><a class="prev" href="../OSINT/methodology.html"><span>ก่อนหน้า</span>OSINT Methodology</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Misc/useful_commands.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

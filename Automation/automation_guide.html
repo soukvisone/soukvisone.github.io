@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automation — หา Flag ด้วยคำสั่งเดียว · Personal Notes</title>
+<meta name="description" content="สคริปต์ pipeline 6 ตัว: triage, flag hunt, web, crypto, orchestrator">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub active" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🚀 Automation / <b>Automation — หา Flag ด้วยคำสั่งเดียว</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#bash">bash</a><a href="../tools.html#python3">python3</a><a href="../tools.html#ffuf">ffuf</a><a href="../tools.html#strings">strings</a><a href="../tools.html#binwalk">binwalk</a><a href="../tools.html#jq">jq</a></div>
+<h1 id="automation-flag">Automation — หา Flag ด้วยคำสั่งเดียว</h1>
+<blockquote>
+<p>หน้านี้รวม <strong>สคริปต์ automation 6 ตัว</strong> ที่ทำงานในเครื่องทั้งหมด (ไม่อัปโหลดอะไรออกเน็ต)
+เป้าหมาย: ลดเวลาคิดว่า "จะเริ่มตรงไหน" เหลือแค่ <strong>ใส่ชื่อไฟล์ แล้วอ่านผล</strong></p>
+</blockquote>
+<hr />
+<h2 id="0-60">0) เริ่มใน 60 วินาที</h2>
+<pre><code class="language-bash">cd CTF-2026                      # root ของ repo
+bash install.sh                  # 1) ติดตั้งของที่ขาด (core)
+bash scripts/check_tools.sh      #    หรือตรวจเฉย ๆ ว่าครบไหม
+
+python3 scripts/run_pipeline.py challenge.bin    # 2) สั่งงานเดียว — มันเรียกทุกตัวให้
+</code></pre>
+<p>ถ้าอยากคุมเองทีละขั้น:</p>
+<pre><code class="language-bash">bash scripts/auto_triage.sh challenge.bin    # ตรวจไฟล์ + รัน tool ที่เกี่ยวกับชนิดนั้น
+bash scripts/flag_hunt.sh ./challenge/       # ไล่หา flag ในทุกไฟล์/ทุกชั้น
+python3 scripts/crypto_pipeline.py &quot;UTFO{...}&quot;   # ถอดรหัสข้อความ
+bash scripts/web_flag.sh http://target:8080  # สแกนเว็บ
+</code></pre>
+<hr />
+<h2 id="1">1) ตารางเลือกสคริปต์</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>สถานการณ์</th>
+<th>ใช้ตัวไหน</th>
+<th>ผลลัพธ์</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ได้ไฟล์มา 1 ไฟล์ ไม่รู้ว่าอะไร</td>
+<td><code>auto_triage.sh</code></td>
+<td>ตรวจชนิด + strings + metadata + binwalk + รัน tool ตามชนิด</td>
+</tr>
+<tr>
+<td>มีโฟลเดอร์เต็มไปด้วยไฟล์</td>
+<td><code>flag_hunt.sh</code></td>
+<td>grep/strings/base64/hex/แตก archive 2 ชั้น</td>
+</tr>
+<tr>
+<td>ได้ข้อความที่ดูเข้ารหัส</td>
+<td><code>crypto_pipeline.py</code></td>
+<td>ถอดซ้อน 3 ชั้น + XOR + จัดอันดับ</td>
+</tr>
+<tr>
+<td>ได้ URL เว็บ</td>
+<td><code>web_flag.sh</code></td>
+<td>header/paths/cookie/JWT + grep flag</td>
+</tr>
+<tr>
+<td>ไม่อยากเลือกเอง</td>
+<td><code>run_pipeline.py</code></td>
+<td>เรียกทุกตัวตามชนิดอัตโนมัติ + รวม flag</td>
+</tr>
+<tr>
+<td>อยากรู้ว่าเครื่องขาดอะไร</td>
+<td><code>check_tools.sh</code></td>
+<td>รายการ tool + คำสั่งติดตั้ง</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="2-auto_triagesh">2) <code>auto_triage.sh</code> — ตรวจไฟล์เดียวให้ครบ</h2>
+<pre><code class="language-bash">bash scripts/auto_triage.sh            # ใช้ค่าในไฟล์ (challenge.bin)
+bash scripts/auto_triage.sh file.pdf   # หรือส่ง path มาก็ได้
+</code></pre>
+<p><strong>ทำอะไรตามชนิดไฟล์</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>ชนิด</th>
+<th>สิ่งที่รันให้</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ทุกไฟล์</td>
+<td><code>file</code>, <code>md5sum</code>, <code>strings</code> (ASCII + UTF-16), <code>exiftool</code>, <code>binwalk -e</code></td>
+</tr>
+<tr>
+<td>ZIP</td>
+<td><code>unzip -l</code> + ลองรหัสว่าง</td>
+</tr>
+<tr>
+<td>gzip</td>
+<td><code>gunzip -c</code> แล้ว <code>file</code> ต่อ</td>
+</tr>
+<tr>
+<td>PNG/BMP</td>
+<td><code>zsteg -a</code></td>
+</tr>
+<tr>
+<td>JPEG</td>
+<td><code>steghide</code> (รหัสว่าง)</td>
+</tr>
+<tr>
+<td>WAV/MP3</td>
+<td><code>sox ... spectrogram</code> + <code>multimon-ng -a DTMF</code></td>
+</tr>
+<tr>
+<td>ELF/PE</td>
+<td><code>checksec</code>, <code>readelf</code>, <code>upx -l</code></td>
+</tr>
+<tr>
+<td>PDF</td>
+<td><code>pdftotext</code>, <code>pdfid</code></td>
+</tr>
+<tr>
+<td>Office</td>
+<td><code>olevba</code></td>
+</tr>
+<tr>
+<td>.pyc</td>
+<td><code>pycdc</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>ผลลัพธ์</strong>: <code>output_auto_triage/</code> — มี <code>strings.txt</code>, <code>exiftool.txt</code>, <code>binwalk.txt</code>, <code>spectrogram.png</code>, <code>_flags_all.txt</code></p>
+<hr />
+<h2 id="3-flag_huntsh">3) <code>flag_hunt.sh</code> — ไล่หาทุกซอกทุกมุม</h2>
+<pre><code class="language-bash">bash scripts/flag_hunt.sh                  # สแกนโฟลเดอร์ปัจจุบัน
+bash scripts/flag_hunt.sh ./challenge      # เจาะจงโฟลเดอร์
+bash scripts/flag_hunt.sh file.bin         # ไฟล์เดียว
+</code></pre>
+<p><strong>ลำดับที่มันทำ</strong></p>
+<pre><code>1. grep ตรง ๆ ในทุกไฟล์
+2. strings (จับข้อความในไบนารี)
+3. base64 ที่ฝังอยู่ → ถอด → grep ซ้ำ
+4. hex ที่ฝังอยู่ → ถอด → grep ซ้ำ
+5. แตก zip/tar/gz/7z/rar 2 ชั้น แล้ว grep ข้างใน
+6. สรุป: แยก &quot;flag มาตรฐาน&quot; กับ &quot;รูปแบบอื่นที่น่าสงสัย&quot;
+</code></pre>
+<p><strong>จุดที่ต่างจาก <code>grep -r</code> ธรรมดา</strong></p>
+<ul>
+<li>จับรูปแบบกว้างกว่า: <code>[A-Za-z0-9_]{2,16}\{...\}</code> → เจอ flag ที่ยัง <strong>เข้ารหัส</strong> อยู่ (เช่น <code>OST_RLNS{...}</code>)</li>
+<li>ถอด base64/hex ให้ก่อน grep → เจอ flag ที่ซ่อนในข้อมูลเข้ารหัส</li>
+<li>แตกไฟล์บีบอัดให้อัตโนมัติ</li>
+</ul>
+<p><strong>ผลลัพธ์</strong>: <code>output_flag_hunt/hits.txt</code> (ทุก hit + มาจากไฟล์ไหน), <code>_FLAGS.txt</code></p>
+<hr />
+<h2 id="4-crypto_pipelinepy">4) <code>crypto_pipeline.py</code> — ถอดรหัสซ้อนหลายชั้น</h2>
+<pre><code class="language-bash">python3 scripts/crypto_pipeline.py                          # ใช้ DATA ในไฟล์
+python3 scripts/crypto_pipeline.py &quot;UTFO{qrs_123}&quot;          # ส่งข้อความ
+python3 scripts/crypto_pipeline.py cipher.bin               # อ่านจากไฟล์
+</code></pre>
+<p><strong>วิธีที่มันลองให้อัตโนมัติ</strong></p>
+<pre><code>base64 · base32 · base58 · hex · rot13 · rot47 · url-decode
+caesar (1-25) · atbash · morse · binary (0/1)
++ ถอดซ้อนกันได้ถึง 3 ชั้น (เช่น base64 → base64 → reverse)
++ XOR: 1 ไบต์ทั้ง 256 ค่า, และคีย์ซ้ำโดยใช้เบาะแส CSG_FLAG{
+</code></pre>
+<p><strong>อ่านผลยังไง</strong></p>
+<pre><code>2.1) ถอดชั้นที่ 1
+  [base64] CSG_FLAG{one_layer}          &lt;- เจอแล้ว จบ
+2.2) ถอดชั้นที่ 2
+  [rot13] ...
+[+] CSG_FLAG{...}                        &lt;- สรุปท้ายสุด
+[?] OST_RLNS{Ynk!==...}                  &lt;- รูปแบบอื่น = ยังต้องถอดต่อ
+</code></pre>
+<p><strong>ผลลัพธ์</strong>: <code>output_crypto_pipeline/results.txt</code> (ทุก candidate + ลำดับการถอด), <code>_FLAGS.txt</code></p>
+<hr />
+<h2 id="5-web_flagsh-path">5) <code>web_flag.sh</code> — สแกนเว็บแบบไม่ต้องคิด path เอง</h2>
+<pre><code class="language-bash">bash scripts/web_flag.sh http://target:8080
+</code></pre>
+<p><strong>สิ่งที่ยิงให้</strong></p>
+<pre><code>/robots.txt /sitemap.xml /.well-known/security.txt /.git/HEAD /.env
+/admin /login /api /api/v1 /debug /backup.zip /uploads /phpinfo.php
+/actuator/env /swagger /server-status /.htaccess /config.php.bak  ...
+</code></pre>
+<p>พร้อมกับ:</p>
+<ul>
+<li>เก็บ header ทั้งหมด (ดู <code>Server</code>, <code>X-Powered-By</code>, <code>Set-Cookie</code>)</li>
+<li>ถอด JWT ที่อยู่ในคุกกี้ให้ทันที</li>
+<li>grep <code>CSG_FLAG{...}</code> และรูปแบบอื่นในทุก response</li>
+</ul>
+<p><strong>เปิด ffuf เพิ่ม</strong> (ถ้าต้องการ wordlist ใหญ่):</p>
+<pre><code class="language-bash"># แก้บรรทัดในไฟล์
+RUN_FFUF=&quot;yes&quot;
+</code></pre>
+<p><strong>ผลลัพธ์</strong>: <code>output_web_flag/pages/</code> (ทุก response), <code>found_200.txt</code>, <code>cookies.txt</code>, <code>jwt.txt</code>, <code>_FLAGS.txt</code></p>
+<hr />
+<h2 id="6-run_pipelinepy">6) <code>run_pipeline.py</code> — ตัวสั่งงานเดียว</h2>
+<pre><code class="language-bash">python3 scripts/run_pipeline.py challenge.bin
+python3 scripts/run_pipeline.py ./challenge
+python3 scripts/run_pipeline.py http://target:8080
+</code></pre>
+<p><strong>มันทำอะไร</strong></p>
+<pre><code>ถ้าเป็น URL      -&gt; web_flag.sh
+ถ้าเป็นไฟล์      -&gt; auto_triage.sh -&gt; flag_hunt.sh -&gt; crypto_pipeline.py (กับข้อความที่เจอ)
+สุดท้าย          -&gt; กวาดทุก output_*/ หา flag รวมเป็น _ALL_FLAGS.txt
+</code></pre>
+<p>ใช้เมื่อ <strong>ขี้เกียจเลือก</strong> หรืออยากได้ภาพรวมเร็ว ๆ ก่อนลงมืออ่านละเอียด</p>
+<hr />
+<h2 id="7-one-liner">7) One-liner ที่ใช้บ่อย (คัดลอกไปรันได้เลย)</h2>
+<pre><code class="language-bash"># 1) หา flag ทั้งโฟลเดอร์ (เร็วสุด)
+grep -a -r -o 'CSG_FLAG{[^}]*}' . | sort -u
+
+# 2) หา flag ใน strings ของทุกไฟล์
+find . -type f -exec strings -n 6 {} + 2&gt;/dev/null | grep -o 'CSG_FLAG{[^}]*}' | sort -u
+
+# 3) base64 ซ้อน 3 ชั้น
+python3 - &lt;&lt;'PY'
+import base64
+s = &quot;PUT_BASE64_HERE&quot;
+for _ in range(3):
+    s = base64.b64decode(s + &quot;===&quot;).decode(errors=&quot;replace&quot;)
+    print(s)
+PY
+
+# 4) แตก zip ที่ติดรหัส แล้ว crack
+zip2john file.zip &gt; h.txt &amp;&amp; john --wordlist=/usr/share/wordlists/rockyou.txt h.txt
+
+# 5) ดู spectrogram จากไฟล์เสียง
+sox sound.wav -n spectrogram -o spec.png -x 2000 -y 1025 &amp;&amp; echo &quot;เปิด spec.png&quot;
+
+# 6) อ่าน QR
+zbarimg -q --raw qr.png
+
+# 7) pcap: ดึงไฟล์ที่โหลดผ่าน HTTP
+mkdir -p objs &amp;&amp; tshark -r cap.pcap --export-objects http,objs -q &amp;&amp; ls objs
+
+# 8) JWT: ถอด payload
+python3 -c &quot;import base64,json,sys;t=sys.argv[1].split('.')[1];print(json.loads(base64.urlsafe_b64decode(t+'===')))&quot; '&lt;token&gt;'
+
+# 9) หา secret ที่ซ่อนใน .git
+git log --all -p | grep -i -E 'csg|flag|password'
+
+# 10) ไฟล์ที่ถูก XOR 1 ไบต์
+python3 - &lt;&lt;'PY'
+d = open(&quot;cipher.bin&quot;,&quot;rb&quot;).read()
+best = max(range(256), key=lambda k: sum(32 &lt;= (b ^ k) &lt; 127 for b in d))
+print(bytes(b ^ best for b in d)[:200])
+PY
+</code></pre>
+<hr />
+<h2 id="8">8) วิธีเขียนสคริปต์เองให้เป็นแนวเดียวกัน</h2>
+<p>โครงที่ใช้ซ้ำได้ทุกตัว (คัดลอกไปต่อยอด):</p>
+<pre><code class="language-bash">#!/usr/bin/env bash
+TARGET=&quot;${1:-challenge.bin}&quot;          # ← แก้บรรทัดเดียว
+
+OUT=&quot;output_$(basename &quot;$0&quot; .sh)&quot;     # ← โฟลเดอร์ผลลัพธ์อัตโนมัติ
+mkdir -p &quot;$OUT&quot;
+
+need() {                              # ← เช็ก tool ก่อนใช้ + บอกวิธีติดตั้ง
+  command -v &quot;$1&quot; &gt;/dev/null 2&gt;&amp;1 &amp;&amp; return 0
+  echo &quot;[!] ไม่มี $1 — sudo apt install -y ${2:-$1}&quot;; return 1
+}
+
+need file &amp;&amp; file &quot;$TARGET&quot; | tee &quot;$OUT/file.txt&quot;
+
+grep -a -o -E 'CSG_FLAG\{[^}]*\}' &quot;$OUT&quot;/* 2&gt;/dev/null | sort -u | tee &quot;$OUT/_FLAGS.txt&quot;
+</code></pre>
+<p><strong>หลัก 5 ข้อ</strong></p>
+<ol>
+<li>ตัวแปรเดียวที่หัวไฟล์ + รับ <code>$1</code> เป็น override</li>
+<li><code>need()</code> ทุกครั้งก่อนเรียก tool</li>
+<li>เขียนผลลง <code>output_&lt;ชื่อสคริปต์&gt;/</code> เสมอ</li>
+<li>ปิดท้ายด้วยการ grep flag</li>
+<li>อย่าอัปโหลดอะไรออกเน็ต</li>
+</ol>
+<hr />
+<h2 id="9">9) ข้อจำกัดที่ต้องรู้</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>ข้อจำกัด</th>
+<th>ผลคือ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flag_hunt.sh</code> จำกัดไฟล์ &lt; 300 MB</td>
+<td>ไฟล์ใหญ่ (memory dump) ต้องรัน <code>strings</code> เอง</td>
+</tr>
+<tr>
+<td>แตก archive แค่ 2 ชั้น</td>
+<td>ซ้อน 5 ชั้นต้องรันซ้ำ</td>
+</tr>
+<tr>
+<td><code>crypto_pipeline.py</code> ถอด 3 ชั้น</td>
+<td>ซ้อนกว่านั้นให้เพิ่ม <code>MAX_DEPTH</code></td>
+</tr>
+<tr>
+<td><code>xor_crib</code> รองรับคีย์ ≤ 8 ไบต์</td>
+<td>คีย์ยาวกว่านั้นต้องเขียนเพิ่ม</td>
+</tr>
+<tr>
+<td><code>web_flag.sh</code> ใช้ path list ในตัว</td>
+<td>ถ้าไม่เจอ ให้เปิด <code>RUN_FFUF="yes"</code></td>
+</tr>
+<tr>
+<td>automation ไม่ "คิด" แทน</td>
+<td>มันแค่ทำสิ่งที่เราสั่งให้ครบและเร็วขึ้น</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="10">10) ความปลอดภัย</h2>
+<ul>
+<li>สคริปต์ทั้งหมดทำงานในเครื่อง ไม่ส่งไฟล์ออกเน็ต</li>
+<li><code>web_flag.sh</code> ยิงเฉพาะ URL ที่คุณให้ (เฉพาะเป้าหมายในโจทย์)</li>
+<li>ไม่มีการรันไฟล์ตัวอย่าง (malware) — ใช้ <code>strings</code>/<code>file</code>/<code>capa</code> เท่านั้น</li>
+<li>ถ้าต้องรันไบนารีแปลก ๆ ให้ทำใน VM/WSL แยก</li>
+</ul>
+<div class="pager"><a class="prev" href="../overview.html"><span>ก่อนหน้า</span>ภาพรวมทั้งหมด</a><a class="next" href="../Crypto/crypto_cheatsheet.html"><span>ถัดไป</span>Crypto Cheatsheet</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Automation/automation_guide.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

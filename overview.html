@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ภาพรวมทั้งหมด · Personal Notes</title>
+<meta name="description" content="ตาราง “ได้อะไรมา → เปิดหน้าไหน” + กฎการใช้ tools">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub active" href="overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="Forensics/strings_commands.html">strings</a>
+<a class="sub" href="Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="tools.html">Tools Index</a><a class="sub" href="index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">📌 เริ่มต้น / <b>ภาพรวมทั้งหมด</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+
+<h1 id="_1">ภาพรวมทั้งหมด</h1>
+<blockquote>
+<p>cheat sheet + คำสั่งพร้อมรัน + automation สำหรับไล่หา flag
+ทุกหน้าอยู่ในเครื่อง เปิดได้แบบ offline (ไม่ต้องต่อเน็ต)</p>
+</blockquote>
+<hr />
+<h2 id="1">1) เริ่มตรงไหน</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>เวลา</th>
+<th>ทำอะไร</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>30 วินาที</strong></td>
+<td><code>cd Automation &amp;&amp; python3 run_pipeline.py &lt;ไฟล์&gt;</code> — ให้มันไล่หาให้ก่อน</td>
+</tr>
+<tr>
+<td><strong>5 นาที</strong></td>
+<td>เปิดตารางข้อ 3 ด้านล่าง แล้วเลือกหน้าให้ตรงกับสิ่งที่โจทย์ให้มา</td>
+</tr>
+<tr>
+<td><strong>ก่อนแข่ง</strong></td>
+<td><code>bash install.sh</code> ติดตั้งของที่ขาด</td>
+</tr>
+<tr>
+<td><strong>อ่านลึก</strong></td>
+<td>เปิดหมวดซ้ายมือ (Crypto / Forensics / Web / Reverse / OSINT / Misc)</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="2">2) ตาราง: ได้อะไรมา → เปิดหน้าไหน</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>โจทย์ให้</th>
+<th>หน้า</th>
+<th>คำสั่งแรก</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ไฟล์ไม่รู้ชนิด</td>
+<td><a href="Forensics/file_signatures.html">File Signatures</a></td>
+<td><code>file</code> + <code>xxd -l 64</code></td>
+</tr>
+<tr>
+<td>รูปภาพ</td>
+<td><a href="Forensics/metadata.html">Metadata</a></td>
+<td><code>exiftool -a -u -g1</code></td>
+</tr>
+<tr>
+<td>ไฟล์ที่มีอะไรซ่อนอยู่</td>
+<td><a href="Forensics/binwalk_commands.html">binwalk &amp; Carving</a></td>
+<td><code>binwalk -e</code></td>
+</tr>
+<tr>
+<td>ไฟล์ไบนารี</td>
+<td><a href="Forensics/strings_commands.html">strings</a></td>
+<td><code>strings -n 6 \| grep -i csg</code></td>
+</tr>
+<tr>
+<td>ข้อความเข้ารหัส</td>
+<td><a href="Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a></td>
+<td>CyberChef Magic / <code>crypto_pipeline.py</code></td>
+</tr>
+<tr>
+<td>n, e, c (RSA)</td>
+<td><a href="Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a></td>
+<td><code>RsaCtfTool</code></td>
+</tr>
+<tr>
+<td>ค่า hash</td>
+<td><a href="Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a></td>
+<td><code>hashid</code> → <code>john</code></td>
+</tr>
+<tr>
+<td>URL เว็บ</td>
+<td><a href="Web/web_cheatsheet.html">Web Cheatsheet</a></td>
+<td><code>curl -i</code></td>
+</tr>
+<tr>
+<td>ช่องกรอกบนเว็บ</td>
+<td><a href="Web/common_payloads.html">Common Payloads</a></td>
+<td>ดูชนิดช่องโหว่</td>
+</tr>
+<tr>
+<td>ต้องยิงคำสั่งเว็บเยอะ</td>
+<td><a href="Web/commands.html">Web Commands</a></td>
+<td><code>ffuf</code></td>
+</tr>
+<tr>
+<td>.exe / ELF / .pyc / .apk</td>
+<td><a href="Reverse/reversing_notes.html">Reversing Notes</a></td>
+<td><code>file</code> → <code>strings</code> → <code>ltrace</code></td>
+</tr>
+<tr>
+<td>ต้องใช้ gdb/ghidra</td>
+<td><a href="Reverse/common_commands.html">Reverse Commands</a></td>
+<td>ตารางท้ายหน้า</td>
+</tr>
+<tr>
+<td>รูป/ชื่อ/โดเมน</td>
+<td><a href="OSINT/methodology.html">OSINT Methodology</a></td>
+<td><code>exiftool</code> → <code>git log</code></td>
+</tr>
+<tr>
+<td>เสียง/QR/DB/log</td>
+<td><a href="Misc/useful_commands.html">Useful Commands</a></td>
+<td>ตารางข้อ 13</td>
+</tr>
+<tr>
+<td>อยากให้สคริปต์ไล่หาให้</td>
+<td><a href="Automation/automation_guide.html">Automation</a></td>
+<td><code>python3 scripts/run_pipeline.py &lt;target&gt;</code></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="3-5-tools">3) กฎ 5 ข้อของสนาม (จากรายการ tools ที่อนุญาต)</h2>
+<ol>
+<li><strong>ห้ามใช้บริการออนไลน์วิเคราะห์ไฟล์</strong> — VirusTotal, CrackStation, dCode, online decompiler อยู่ในรายการที่ไม่อนุมัติ</li>
+<li><strong>ห้ามใช้ AI/ML library</strong> — Python เพิ่มไลบรารีได้ แต่ห้ามพวก LLM / ML framework</li>
+<li><strong>เครื่องมือที่ถูกตัดออก</strong> — IDA Free, PEiD, dirsearch, stegdetect (ใช้ Ghidra/r2, DIE, ffuf, zsteg แทน)</li>
+<li><strong>ใช้ได้ทั้ง Windows และ Kali</strong> — Windows มี CyberChef/HxD/Wireshark/x64dbg/dnSpy/Autopsy, Kali มี tool ครบกว่า</li>
+<li><strong>tool อาจไม่ครบตามที่ขอ</strong> — มี Plan B ทุกครั้ง (ไม่มี r2 → ใช้ objdump; ไม่มี chainsaw → evtx_dump)</li>
+</ol>
+<hr />
+<h2 id="4">4) โครงสร้าง</h2>
+<pre><code>docs/                        เว็บชุดนี้ (เปิด index.html ได้เลย)
+├── index.html               หน้าแรก + ค้นหา
+├── tools.html               Tools Index — tool ทุกตัว → หน้าที่ใช้
+├── assets/                  site.css, site.js (ไม่ใช้ CDN)
+├── build.py                 สร้าง .html จาก .md
+├── Automation/              คู่มือสคริปต์ + one-liner recipes
+├── Crypto/                  base64 → Vigenère → XOR → hash → RSA
+├── Forensics/               file signatures · binwalk · strings · metadata
+├── Web/                     cheatsheet · payloads · commands
+├── Reverse/                 notes · commands
+├── OSINT/                   methodology
+└── Misc/                    useful commands
+
+scripts/                     ตัวที่ใช้จริงตอนแข่ง (ดู scripts/README.md)
+├── check_tools.sh           ตรวจ tool ที่ขาด
+├── run_pipeline.py          สั่งงานเดียว
+├── auto_triage.sh           ไฟล์เดียว
+├── flag_hunt.sh             ทั้งโฟลเดอร์
+├── web_flag.sh              เว็บ
+└── crypto_pipeline.py       ถอดรหัส
+
+requirements.txt             รายการ tool + comment (core/extra)
+install.sh                   ติดตั้งตาม requirements.txt
+</code></pre>
+<hr />
+<h2 id="5">5) เทคนิคจากโจทย์จริงที่อ้างถึงในเอกสาร</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>โจทย์</th>
+<th>หมวด</th>
+<th>เทคนิค</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C2 Plato</td>
+<td>Crypto</td>
+<td>zip ซ่อนใน jpg + จิ๊กซอว์ 4×3 + Vigenère (คีย์จาก crib)</td>
+</tr>
+<tr>
+<td>C4 forgotten password</td>
+<td>Crypto</td>
+<td>john <code>--mask</code> สำหรับรหัสตัวเลข</td>
+</tr>
+<tr>
+<td>OT1 RFID</td>
+<td>Crypto</td>
+<td>ถอดบิต EM4100 ตามกติกา</td>
+</tr>
+<tr>
+<td>S2 Cutest Cat</td>
+<td>Stegano</td>
+<td>exiftool → รหัสใน UserComment → unzip</td>
+</tr>
+<tr>
+<td>S3 Hidden in Plain Sight</td>
+<td>Stegano</td>
+<td>stego decoder + base64 ×2 + reverse</td>
+</tr>
+<tr>
+<td>Cat Tail</td>
+<td>Stegano</td>
+<td>LSB ช่องฟ้า + metadata + ท้ายไฟล์</td>
+</tr>
+<tr>
+<td>O1 Japan / geoguess</td>
+<td>OSINT</td>
+<td>อ่านป้าย/ภาษา/พืช + แผนที่</td>
+</tr>
+<tr>
+<td>OSINT github</td>
+<td>OSINT</td>
+<td><code>git log</code>, <code>git show -s --format='%ae'</code></td>
+</tr>
+<tr>
+<td>SMB3overKerberos</td>
+<td>Network</td>
+<td>impacket AS-REP → hashcat</td>
+</tr>
+<tr>
+<td>N1 Man in the flag</td>
+<td>Network</td>
+<td>replay S3 request พร้อม header SSE-C</td>
+</tr>
+<tr>
+<td>Packer</td>
+<td>Reversing</td>
+<td><code>upx -d</code></td>
+</tr>
+<tr>
+<td>Hunt4C2</td>
+<td>Reversing</td>
+<td>YARA + capa</td>
+</tr>
+<tr>
+<td>matryoshka</td>
+<td>Reversing</td>
+<td>ถอด eval(gzinflate(base64)) หลายชั้น</td>
+</tr>
+<tr>
+<td>corrupted</td>
+<td>Reversing</td>
+<td>ซ่อม header ไฟล์</td>
+</tr>
+<tr>
+<td>memory forensics</td>
+<td>Forensics</td>
+<td><code>strings dump \| grep SECRET</code> → TLS key</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="6">6) แก้เนื้อหายังไง</h2>
+<pre><code class="language-bash"># 1) แก้ไฟล์ .md ที่ต้องการ
+nano docs/Crypto/crypto_cheatsheet.md
+
+# 2) สร้าง html ใหม่
+python3 docs/build.py
+
+# 3) เปิดดู
+xdg-open docs/index.html
+</code></pre>
+<div class="pager"><span></span><a class="next" href="Automation/automation_guide.html"><span>ถัดไป</span>Automation — หา Flag ด้วยคำสั่งเดียว</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>overview.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

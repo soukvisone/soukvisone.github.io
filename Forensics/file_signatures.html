@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>File Signatures · Personal Notes</title>
+<meta name="description" content="magic bytes 20 ชนิด + ซ่อมไฟล์เสีย + ของที่ซ่อนท้ายไฟล์">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../overview.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub active" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🧪 Forensics / <b>File Signatures</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#file">file</a><a href="../tools.html#xxd">xxd</a><a href="../tools.html#hexdump">hexdump</a><a href="../tools.html#pngcheck">pngcheck</a><a href="../tools.html#hxd">HxD</a></div>
+<h1 id="file-signatures-forensics-101">File Signatures — รู้จักไฟล์จากไบต์แรก (Forensics 101)</h1>
+<blockquote>
+<p>ใช้เมื่อ: ได้ไฟล์มาแล้ว <strong>ไม่รู้ว่าจริง ๆ เป็นอะไร</strong> (นามสกุลหลอกได้เสมอ)
+เครื่องมือ: <code>file</code>, <code>xxd</code>, <code>hexdump</code>, <code>HxD</code> (Windows), <code>CyberChef</code></p>
+</blockquote>
+<hr />
+<h2 id="1">1) คำสั่งแรกที่ต้องรันทุกครั้ง</h2>
+<pre><code class="language-bash">file suspicious.bin                 # ดู magic bytes ไม่สนนามสกุล
+file -b --mime-type suspicious.bin  # เอา MIME ไปใช้ต่อ
+xxd -l 64 suspicious.bin            # ไบต์แรก 64 ไบต์ (ดูด้วยตา)
+</code></pre>
+<p>ตัวอย่างผลลัพธ์:</p>
+<pre><code>suspicious.bin: PNG image data, 1920 x 1080, 8-bit/color RGBA, non-interlaced
+</code></pre>
+<p>แปลว่า <strong>นามสกุลหลอก</strong> — ของจริงเป็น PNG → เปลี่ยนชื่อเป็น <code>.png</code> แล้วเปิดดู</p>
+<pre><code class="language-bash">mv suspicious.bin suspicious.png
+</code></pre>
+<p><strong>จาก writeup 2025 — S2: Save the Cutest Cat (Stegano)</strong>
+ไฟล์ <code>S3.jpg</code> หน้าตาเป็น JPEG ปกติ แต่เปิดด้วย unzip ได้ เพราะข้างในมี ZIP ต่อท้าย
+→ บทเรียน: <code>file</code> อย่างเดียวไม่พอ ต้องลอง <code>unzip -l</code> ด้วย (ดู <code>binwalk_commands.md</code>)</p>
+<hr />
+<h2 id="2-magic-bytes">2) ตาราง Magic Bytes ที่ต้องจำ</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>ชนิดไฟล์</th>
+<th>ไบต์แรก (hex)</th>
+<th>หน้าตาใน xxd</th>
+<th>นามสกุล</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PNG</td>
+<td><code>89 50 4E 47 0D 0A 1A 0A</code></td>
+<td><code>.PNG....</code></td>
+<td>.png</td>
+</tr>
+<tr>
+<td>JPEG</td>
+<td><code>FF D8 FF</code></td>
+<td><code>ÿØÿ</code></td>
+<td>.jpg</td>
+</tr>
+<tr>
+<td>GIF</td>
+<td><code>47 49 46 38</code></td>
+<td><code>GIF8</code></td>
+<td>.gif</td>
+</tr>
+<tr>
+<td>BMP</td>
+<td><code>42 4D</code></td>
+<td><code>BM</code></td>
+<td>.bmp</td>
+</tr>
+<tr>
+<td>PDF</td>
+<td><code>25 50 44 46</code></td>
+<td><code>%PDF</code></td>
+<td>.pdf</td>
+</tr>
+<tr>
+<td>ZIP</td>
+<td><code>50 4B 03 04</code></td>
+<td><code>PK..</code></td>
+<td>.zip/.docx/.xlsx/.apk</td>
+</tr>
+<tr>
+<td>RAR</td>
+<td><code>52 61 72 21</code></td>
+<td><code>Rar!</code></td>
+<td>.rar</td>
+</tr>
+<tr>
+<td>7-Zip</td>
+<td><code>37 7A BC AF 27 1C</code></td>
+<td><code>7z..'.</code></td>
+<td>.7z</td>
+</tr>
+<tr>
+<td>GZIP</td>
+<td><code>1F 8B</code></td>
+<td><code>..</code></td>
+<td>.gz</td>
+</tr>
+<tr>
+<td>BZIP2</td>
+<td><code>42 5A 68</code></td>
+<td><code>BZh</code></td>
+<td>.bz2</td>
+</tr>
+<tr>
+<td>XZ</td>
+<td><code>FD 37 7A 58 5A 00</code></td>
+<td><code>..7zXZ.</code></td>
+<td>.xz</td>
+</tr>
+<tr>
+<td>TAR</td>
+<td>offset 257 = <code>75 73 74 61 72</code></td>
+<td><code>ustar</code></td>
+<td>.tar</td>
+</tr>
+<tr>
+<td>ELF (Linux)</td>
+<td><code>7F 45 4C 46</code></td>
+<td><code>.ELF</code></td>
+<td>ไม่มีนามสกุล</td>
+</tr>
+<tr>
+<td>PE / EXE (Windows)</td>
+<td><code>4D 5A</code></td>
+<td><code>MZ</code></td>
+<td>.exe/.dll</td>
+</tr>
+<tr>
+<td>Mach-O (mac)</td>
+<td><code>CF FA ED FE</code></td>
+<td><code>....</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td><code>53 51 4C 69 74 65 20 66 6F 72 6D 61 74 20 33 00</code></td>
+<td><code>SQLite format 3.</code></td>
+<td>.db/.sqlite</td>
+</tr>
+<tr>
+<td>PCAP</td>
+<td><code>D4 C3 B2 A1</code> หรือ <code>A1 B2 C3 D4</code></td>
+<td>—</td>
+<td>.pcap</td>
+</tr>
+<tr>
+<td>PCAPNG</td>
+<td><code>0A 0D 0D 0A</code></td>
+<td>—</td>
+<td>.pcapng</td>
+</tr>
+<tr>
+<td>EVTX (Windows log)</td>
+<td><code>45 6C 66 46 69 6C 65 00</code></td>
+<td><code>ElfFile.</code></td>
+<td>.evtx</td>
+</tr>
+<tr>
+<td>OLE2 (doc/xls เก่า)</td>
+<td><code>D0 CF 11 E0 A1 B1 1A E1</code></td>
+<td>—</td>
+<td>.doc/.xls</td>
+</tr>
+<tr>
+<td>RIFF (WAV/AVI)</td>
+<td><code>52 49 46 46</code></td>
+<td><code>RIFF</code></td>
+<td>.wav/.avi</td>
+</tr>
+<tr>
+<td>MP3</td>
+<td><code>49 44 33</code></td>
+<td><code>ID3</code></td>
+<td>.mp3</td>
+</tr>
+<tr>
+<td>FLAC</td>
+<td><code>66 4C 61 43</code></td>
+<td><code>fLaC</code></td>
+<td>.flac</td>
+</tr>
+<tr>
+<td>OGG</td>
+<td><code>4F 67 67 53</code></td>
+<td><code>OggS</code></td>
+<td>.ogg</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>ท่องให้ขึ้นใจ 5 ตัวที่เจอบ่อยสุด:</strong> <code>%PDF</code>, <code>PK</code>, <code>MZ</code>, <code>.ELF</code>, <code>89 50 4E 47</code></p>
+<hr />
+<h2 id="3-header">3) ไฟล์เสีย / header ถูกแก้ — ซ่อมยังไง</h2>
+<p>โจทย์แนว "Reversing corrupted" (writeup 2025) คือเอาไฟล์มาแล้วเปิดไม่ได้ เพราะ header เพี้ยน</p>
+<h3 id="31-png">3.1 PNG ที่เปิดไม่ขึ้น</h3>
+<pre><code class="language-bash">pngcheck -v broken.png          # บอกว่าพังตรงไหน
+xxd -l 32 broken.png            # เทียบกับ PNG ปกติ: 89 50 4E 47 0D 0A 1A 0A
+</code></pre>
+<p>ถ้า 8 ไบต์แรกเพี้ยน → เขียนทับด้วย header ที่ถูก:</p>
+<pre><code class="language-bash">printf '\x89PNG\r\n\x1a\n' | dd of=broken.png bs=1 conv=notrunc
+pngcheck -v broken.png
+</code></pre>
+<p>(Windows: ใช้ <strong>HxD</strong> แก้ 8 ไบต์แรกด้วยมือ — ปลอดภัยกว่า)</p>
+<h3 id="32-zip">3.2 ZIP ที่แตกไม่ได้</h3>
+<pre><code class="language-bash">unzip -l broken.zip            # ดูสารบัญก่อน
+zip -FF broken.zip --out fixed.zip    # ซ่อม ZIP ที่หัวไฟล์เสีย
+7z l broken.zip                # 7z อ่านได้หลายกรณีที่ unzip พัง
+</code></pre>
+<h3 id="33">3.3 ไฟล์ที่ถูกสลับหัวท้าย / ต่อกันหลายไฟล์</h3>
+<pre><code class="language-bash">binwalk broken.bin             # ดูว่ามีกี่ไฟล์ต่อกัน (offset ไหน)
+binwalk -e broken.bin          # แตกออกมาทั้งหมด
+</code></pre>
+<h3 id="34-pe">3.4 PE ที่รันไม่ขึ้น</h3>
+<pre><code class="language-bash">file sample.exe
+objdump -x sample.exe | head -40
+# ถ้า MZ ถูก แต่ offset ของ PE header (e_lfanew ที่ 0x3C) เพี้ยน -&gt; แก้ด้วย HxD
+</code></pre>
+<hr />
+<h2 id="4">4) ดูไบต์ท้ายไฟล์ — จุดที่คนลืม</h2>
+<p>แฟล็กมักซ่อน <strong>ต่อท้ายไฟล์</strong> ไม่ใช่ต้นไฟล์</p>
+<pre><code class="language-bash"># ดู 200 ไบต์สุดท้าย
+tail -c 200 suspicious.png | xxd
+
+# หา flag ในส่วนท้าย
+tail -c 5000 suspicious.png | strings -n 4 | grep -i csg
+</code></pre>
+<p><strong>จาก writeup 2025 — Cat Tail (Stegano)</strong>
+คำว่า "tail" ในชื่อโจทย์ไม่ได้หมายถึงหางแมว แต่หมายถึง <strong>ท้ายไฟล์</strong> — flag ส่วนที่ 3 อยู่ตรงนั้น</p>
+<pre><code class="language-bash">tail -c 1000 cat.png | strings
+</code></pre>
+<hr />
+<h2 id="5-polyglot">5) ไฟล์ที่ซ่อนไฟล์อื่นไว้ข้างใน (polyglot)</h2>
+<p>ไฟล์เดียวเป็นได้หลายอย่าง เช่น JPG + ZIP พร้อมกัน</p>
+<pre><code class="language-bash">file poly.jpg                  # บอก JPEG
+unzip -l poly.jpg              # แต่อันนี้ก็เปิดได้!
+binwalk poly.jpg               # เห็น offset ของ ZIP
+dd if=poly.jpg of=hidden.zip bs=1 skip=&lt;offset&gt;   # แยกออกมา
+</code></pre>
+<p><strong>สูตรตรวจเร็ว:</strong></p>
+<pre><code class="language-bash">for f in *; do
+  printf '%-30s ' &quot;$f&quot;
+  file -b &quot;$f&quot; | cut -c1-50
+done
+</code></pre>
+<hr />
+<h2 id="6">6) ไฟล์ที่ไม่มีนามสกุลเลย</h2>
+<pre><code class="language-bash">file *
+ls -la                      # ดูขนาด + เวลา (บางทีบอกอะไรได้)
+xxd -l 16 * | head -40      # ไบต์แรกของทุกไฟล์
+</code></pre>
+<p>ถ้าเป็นไบต์สุ่มทั้งหมด (entropy สูง) → อาจเป็น:
+- ไฟล์ที่ถูก XOR
+- ไฟล์ที่ถูกบีบอัด/เข้ารหัส
+- memory dump / disk image</p>
+<p>→ ไปดู <code>binwalk_commands.md</code> และ <code>../Crypto/crypto_cheatsheet.md</code> (XOR)</p>
+<hr />
+<h2 id="7">7) ตารางตัดสินใจ</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>เจออะไร</th>
+<th>ทำอะไรต่อ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PK</code></td>
+<td><code>unzip -l</code> → <code>binwalk -e</code> → <code>../Misc/useful_commands.md</code> (archive_crack)</td>
+</tr>
+<tr>
+<td><code>MZ</code> (exe)</td>
+<td><code>../Reverse/common_commands.md</code></td>
+</tr>
+<tr>
+<td><code>.ELF</code></td>
+<td><code>checksec</code> + <code>strings</code> + <code>../Reverse/reversing_notes.md</code></td>
+</tr>
+<tr>
+<td><code>%PDF</code></td>
+<td><code>pdfid</code>, <code>mutool info</code>, <code>peepdf</code></td>
+</tr>
+<tr>
+<td><code>ElfFile</code> (evtx)</td>
+<td><code>chainsaw dump</code> / <code>hayabusa</code></td>
+</tr>
+<tr>
+<td><code>SQLite format 3</code></td>
+<td><code>sqlite3 file.db ".tables"</code></td>
+</tr>
+<tr>
+<td><code>RIFF</code>/<code>fLaC</code>/<code>OggS</code></td>
+<td><code>sox --i</code> + <code>../Misc/useful_commands.md</code> (audio)</td>
+</tr>
+<tr>
+<td>ไบต์สุ่มทั้งหมด</td>
+<td>XOR / entropy / memory dump</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="8">8) เคล็ดลับจากสนามจริง</h2>
+<ol>
+<li><strong>อย่าเชื่อนามสกุล</strong> — เปลี่ยนชื่อก่อนเปิดทุกครั้ง</li>
+<li><strong><code>file</code> อย่างเดียวไม่พอ</strong> — ต้อง <code>binwalk</code> + <code>unzip -l</code> + <code>strings</code> ด้วย</li>
+<li><strong>ไฟล์ใหญ่ผิดปกติ</strong> (เช่น รูป 5 MB ที่ควรเป็น 200 KB) = มีอะไรซ่อนอยู่แน่นอน</li>
+<li><strong>ดู timestamp</strong> — บางโจทย์ใช้เวลาเป็นคำใบ้ (<code>exiftool</code> ดูข้อ <code>metadata.md</code>)</li>
+<li>ถ้าแก้ไฟล์แล้วพัง ให้ <strong>ก็อปเก็บต้นฉบับไว้ก่อน</strong> (<code>cp broken.bin broken.bin.bak</code>)</li>
+</ol>
+<div class="pager"><a class="prev" href="../Crypto/crypto_cheatsheet.html"><span>ก่อนหน้า</span>Crypto Cheatsheet</a><a class="next" href="../Forensics/binwalk_commands.html"><span>ถัดไป</span>binwalk &amp; Carving</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Forensics/file_signatures.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>
