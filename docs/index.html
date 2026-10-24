@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>หน้าแรก · Personal Notes</title>
+<meta name="description" content="cheat sheet + automation สำหรับไล่หา flag">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="README.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="Forensics/strings_commands.html">strings</a>
+<a class="sub" href="Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="tools.html">Tools Index</a><a class="sub" href="index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb"><b>หน้าแรก</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+
+
+<section class="hero">
+  <h1>Personal Notes</h1>
+  <p class="lead">cheat sheet + คำสั่งพร้อมรัน + สคริปต์ automation สำหรับไล่หา flag
+  ทุกหน้าคัดจากโจทย์จริงและ tools ที่อนุญาตในสนาม — เลือกหมวดด้านล่างหรือพิมพ์ค้นหา</p>
+  <div class="searchbar">
+    <input id="search" type="search" placeholder="ค้นหา: exiftool, xor, lfi, upx, spectrogram, zip …  (กด / เพื่อโฟกัส)" autocomplete="off">
+  </div>
+  <p class="hint">มี 14 หน้า · เริ่มเร็ว: เปิด <a href="Automation/automation_guide.html">Automation</a> ถ้าอยากให้สคริปต์ไล่หาให้ หรือ <a href="README.html">ภาพรวม</a> ถ้าอยากได้ตารางเลือกเอง</p>
+</section>
+<p id="no-result" class="hint hidden">ไม่พบหน้าที่ตรงกับคำค้น — ลองคำสั้นลง เช่น <code>xor</code>, <code>zip</code>, <code>jwt</code></p>
+
+<section class="quickstart" id="quickstart">
+  <h2>🚀 เริ่มใช้ใน 3 คำสั่ง</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="n">1</div>
+      <div>
+        <h3>โคลนโปรเจกต์ลงเครื่อง</h3>
+        <pre><code>git clone &lt;repo-url&gt; CTF-2026
+cd CTF-2026</code></pre>
+        <p class="hint">ถ้าได้มาเป็นไฟล์ zip: <code>unzip CTF-2026-all-in-one.zip &amp;&amp; cd CTF-2026</code></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">2</div>
+      <div>
+        <h3>ให้สิทธิ์รัน + ติดตั้งของที่ขาด</h3>
+        <pre><code>chmod +x install.sh scripts/*.sh
+bash install.sh              # ติดตั้ง apt/pip/gem ที่ขาด
+bash scripts/check_tools.sh  # ตรวจซ้ำว่าครบ</code></pre>
+        <p class="hint">git กับ zip <b>ไม่เก็บสิทธิ์ +x</b> → ต้องรัน <code>chmod</code> ครั้งเดียวหลัง clone
+        (หรือเรียกด้วย <code>bash ชื่อไฟล์</code> ก็ได้ ไม่ต้อง chmod)</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">3</div>
+      <div>
+        <h3>เริ่มไล่หา flag</h3>
+        <pre><code>python3 scripts/run_pipeline.py challenge.bin
+bash scripts/auto_triage.sh challenge.bin
+bash scripts/flag_hunt.sh .
+bash scripts/web_flag.sh http://target
+python3 scripts/crypto_pipeline.py "UTFO{...}"</code></pre>
+        <p class="hint">ผลลัพธ์ทุกตัวอยู่ใน <code>output_&lt;ชื่อสคริปต์&gt;/</code> และมี <code>_FLAGS.txt</code> เมื่อเจอ</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cat-block"><div class="cat-head"><h2>📌 เริ่มต้น</h2><span class="count">1 หน้า</span></div><div class="grid"><a class="card" href="README.html" data-search="ภาพรวมทั้งหมด ตาราง “ได้อะไรมา → เปิดหน้าไหน” + กฎการใช้ tools เริ่มต้น  overview index ตาราง"><h3>ภาพรวมทั้งหมด</h3><p>ตาราง “ได้อะไรมา → เปิดหน้าไหน” + กฎการใช้ tools</p><div class="tools"></div></a></div></section><section class="cat-block"><div class="cat-head"><h2>🚀 Automation</h2><span class="count">1 หน้า</span></div><div class="grid"><a class="card" href="Automation/automation_guide.html" data-search="Automation — หา Flag ด้วยคำสั่งเดียว สคริปต์ pipeline 6 ตัว: triage, flag hunt, web, crypto, orchestrator Automation bash python3 ffuf strings binwalk jq automation pipeline one-command script"><h3>Automation — หา Flag ด้วยคำสั่งเดียว</h3><p>สคริปต์ pipeline 6 ตัว: triage, flag hunt, web, crypto, orchestrator</p><div class="tools"><span class="chip">bash</span><span class="chip">python3</span><span class="chip">ffuf</span><span class="chip">strings</span><span class="chip">binwalk</span><span class="chip">jq</span></div></a></div></section><section class="cat-block"><div class="cat-head"><h2>🔐 Crypto</h2><span class="count">1 หน้า</span></div><div class="grid"><a class="card" href="Crypto/crypto_cheatsheet.html" data-search="Crypto Cheatsheet base64 → Vigenère → XOR → hash → RSA (สูตรครบพร้อมเคสจริง) Crypto CyberChef python3 openssl RsaCtfTool john hashcat hashid sage base64 hex vigenere xor rsa hash"><h3>Crypto Cheatsheet</h3><p>base64 → Vigenère → XOR → hash → RSA (สูตรครบพร้อมเคสจริง)</p><div class="tools"><span class="chip">CyberChef</span><span class="chip">python3</span><span class="chip">openssl</span><span class="chip">RsaCtfTool</span><span class="chip">john</span><span class="chip">hashcat</span></div></a></div></section><section class="cat-block"><div class="cat-head"><h2>🧪 Forensics</h2><span class="count">4 หน้า</span></div><div class="grid"><a class="card" href="Forensics/file_signatures.html" data-search="File Signatures magic bytes 20 ชนิด + ซ่อมไฟล์เสีย + ของที่ซ่อนท้ายไฟล์ Forensics file xxd hexdump pngcheck HxD magic bytes header corrupted polyglot"><h3>File Signatures</h3><p>magic bytes 20 ชนิด + ซ่อมไฟล์เสีย + ของที่ซ่อนท้ายไฟล์</p><div class="tools"><span class="chip">file</span><span class="chip">xxd</span><span class="chip">hexdump</span><span class="chip">pngcheck</span><span class="chip">HxD</span></div></a><a class="card" href="Forensics/binwalk_commands.html" data-search="binwalk &amp; Carving หาไฟล์ซ่อนในไฟล์ + แตก zip/7z ที่ล็อกรหัส Forensics binwalk foremost testdisk dd unzip 7z bkcrack fcrackzip john carving zip password extract"><h3>binwalk &amp; Carving</h3><p>หาไฟล์ซ่อนในไฟล์ + แตก zip/7z ที่ล็อกรหัส</p><div class="tools"><span class="chip">binwalk</span><span class="chip">foremost</span><span class="chip">testdisk</span><span class="chip">dd</span><span class="chip">unzip</span><span class="chip">7z</span></div></a><a class="card" href="Forensics/strings_commands.html" data-search="strings ขุดข้อความในไบนารี: UTF-16, base64 ในไฟล์, FLOSS, ripgrep Forensics strings FLOSS ripgrep xxd strings utf-16 grep memory dump"><h3>strings</h3><p>ขุดข้อความในไบนารี: UTF-16, base64 ในไฟล์, FLOSS, ripgrep</p><div class="tools"><span class="chip">strings</span><span class="chip">FLOSS</span><span class="chip">ripgrep</span><span class="chip">xxd</span></div></a><a class="card" href="Forensics/metadata.html" data-search="Metadata exiftool / PDF / Office / git — จุดที่คนลืมและมักซ่อนรหัส Forensics exiftool pdfid pdf-parser mutool qpdf pdftotext olemeta olevba git exif gps pdf office git"><h3>Metadata</h3><p>exiftool / PDF / Office / git — จุดที่คนลืมและมักซ่อนรหัส</p><div class="tools"><span class="chip">exiftool</span><span class="chip">pdfid</span><span class="chip">pdf-parser</span><span class="chip">mutool</span><span class="chip">qpdf</span><span class="chip">pdftotext</span></div></a></div></section><section class="cat-block"><div class="cat-head"><h2>🌐 Web</h2><span class="count">3 หน้า</span></div><div class="grid"><a class="card" href="Web/web_cheatsheet.html" data-search="Web Cheatsheet ลำดับคิด 8 ขั้น + ชนิดช่องโหว่ + เคสจาก writeup Web curl Burp ffuf feroxbuster gobuster katana sqlmap jwt_tool nmap hydra recon sqli lfi jwt upload"><h3>Web Cheatsheet</h3><p>ลำดับคิด 8 ขั้น + ชนิดช่องโหว่ + เคสจาก writeup</p><div class="tools"><span class="chip">curl</span><span class="chip">Burp</span><span class="chip">ffuf</span><span class="chip">feroxbuster</span><span class="chip">gobuster</span><span class="chip">katana</span></div></a><a class="card" href="Web/common_payloads.html" data-search="Common Payloads SQLi / XSS / LFI / SSTI / XXE / SSRF / JWT / upload bypass Web curl sqlmap jwt_tool payload injection bypass waf"><h3>Common Payloads</h3><p>SQLi / XSS / LFI / SSTI / XXE / SSRF / JWT / upload bypass</p><div class="tools"><span class="chip">curl</span><span class="chip">sqlmap</span><span class="chip">jwt_tool</span></div></a><a class="card" href="Web/commands.html" data-search="Web Commands curl / ffuf / sqlmap / jwt_tool / hydra / reverse shell Web curl ffuf feroxbuster gobuster katana sqlmap jwt_tool hydra nc commands curl ffuf sqlmap"><h3>Web Commands</h3><p>curl / ffuf / sqlmap / jwt_tool / hydra / reverse shell</p><div class="tools"><span class="chip">curl</span><span class="chip">ffuf</span><span class="chip">feroxbuster</span><span class="chip">gobuster</span><span class="chip">katana</span><span class="chip">sqlmap</span></div></a></div></section><section class="cat-block"><div class="cat-head"><h2>🧩 Reverse</h2><span class="count">2 หน้า</span></div><div class="grid"><a class="card" href="Reverse/reversing_notes.html" data-search="Reversing Notes แยกตามชนิดไฟล์: ELF / PE / .NET / APK / .pyc / PHP / Go Reverse file strings checksec ltrace strace gdb ghidra r2 upx pycdc jadx dnSpy capa YARA DIE elf pe dotnet apk pyc upx"><h3>Reversing Notes</h3><p>แยกตามชนิดไฟล์: ELF / PE / .NET / APK / .pyc / PHP / Go</p><div class="tools"><span class="chip">file</span><span class="chip">strings</span><span class="chip">checksec</span><span class="chip">ltrace</span><span class="chip">strace</span><span class="chip">gdb</span></div></a><a class="card" href="Reverse/common_commands.html" data-search="Reverse Commands readelf / objdump / gdb / ghidra / radare2 / patch ไฟล์ Reverse readelf objdump nm ldd ROPgadget x64dbg pycdc jadx commands gdb ghidra patch"><h3>Reverse Commands</h3><p>readelf / objdump / gdb / ghidra / radare2 / patch ไฟล์</p><div class="tools"><span class="chip">readelf</span><span class="chip">objdump</span><span class="chip">nm</span><span class="chip">ldd</span><span class="chip">ROPgadget</span><span class="chip">x64dbg</span></div></a></div></section><section class="cat-block"><div class="cat-head"><h2>🔍 OSINT</h2><span class="count">1 หน้า</span></div><div class="grid"><a class="card" href="OSINT/methodology.html" data-search="OSINT Methodology รูป / ชื่อผู้ใช้ / โดเมน / อีเมล / git history OSINT exiftool git whois dig subfinder curl Chrome geoguess gps username domain email"><h3>OSINT Methodology</h3><p>รูป / ชื่อผู้ใช้ / โดเมน / อีเมล / git history</p><div class="tools"><span class="chip">exiftool</span><span class="chip">git</span><span class="chip">whois</span><span class="chip">dig</span><span class="chip">subfinder</span><span class="chip">curl</span></div></a></div></section><section class="cat-block"><div class="cat-head"><h2>🧰 Misc</h2><span class="count">1 หน้า</span></div><div class="grid"><a class="card" href="Misc/useful_commands.html" data-search="Useful Commands QR / เสียง / SQLite / evtx / pcap / จัดการไฟล์ Misc zbarimg sox ffmpeg multimon-ng sqlite3 jq ImageMagick steghide stegseek zsteg chainsaw tshark qr audio sqlite evtx pcap"><h3>Useful Commands</h3><p>QR / เสียง / SQLite / evtx / pcap / จัดการไฟล์</p><div class="tools"><span class="chip">zbarimg</span><span class="chip">sox</span><span class="chip">ffmpeg</span><span class="chip">multimon-ng</span><span class="chip">sqlite3</span><span class="chip">jq</span></div></a></div></section>
+
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>README.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

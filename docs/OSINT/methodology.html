@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSINT Methodology · Personal Notes</title>
+<meta name="description" content="รูป / ชื่อผู้ใช้ / โดเมน / อีเมล / git history">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../README.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub active" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🔍 OSINT / <b>OSINT Methodology</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#exiftool">exiftool</a><a href="../tools.html#git">git</a><a href="../tools.html#whois">whois</a><a href="../tools.html#dig">dig</a><a href="../tools.html#subfinder">subfinder</a><a href="../tools.html#curl">curl</a><a href="../tools.html#chrome">Chrome</a></div>
+<h1 id="osint-methodology">OSINT Methodology — วิธีไล่หาข้อมูลแบบเป็นระบบ</h1>
+<blockquote>
+<p>ใช้เมื่อ: โจทย์ให้ "รูป / ชื่อคน / ชื่อผู้ใช้ / โดเมน / อีเมล" มา แล้วถามหาข้อมูลที่เชื่อมโยง
+เครื่องมือ: <code>exiftool</code>, <code>git</code>, <code>whois</code>, <code>dig</code>, <code>curl</code>, <code>Google Chrome</code>, <code>pdftotext</code>
+กฎ: ทำกับ persona ในโจทย์เท่านั้น — ห้ามส่องบัญชีจริงของคนจริง</p>
+</blockquote>
+<hr />
+<h2 id="0">0) เลือกเส้นทางตามสิ่งที่ได้มา</h2>
+<pre><code>ได้รูปถ่าย          -&gt; ข้อ 1 (GPS + geoguess)
+ได้ชื่อผู้ใช้        -&gt; ข้อ 2
+ได้โดเมน/เว็บ        -&gt; ข้อ 3
+ได้อีเมล             -&gt; ข้อ 4
+ได้ชื่อคน           -&gt; ข้อ 5
+ได้ไฟล์/เอกสาร       -&gt; ข้อ 6 (metadata ในเอกสาร)
+</code></pre>
+<hr />
+<h2 id="1">1) ได้รูปมา — ขั้นตอนที่ได้ผลที่สุด</h2>
+<h3 id="11-metadata">1.1 ตรวจ metadata ก่อนเสมอ</h3>
+<pre><code class="language-bash">exiftool -a -u -g1 photo.jpg
+exiftool -n -GPSLatitude -GPSLongitude photo.jpg
+</code></pre>
+<p>ถ้ามีพิกัด → จบงาน (เปิด Google Maps)</p>
+<pre><code>https://www.google.com/maps?q=&lt;lat&gt;,&lt;lon&gt;
+</code></pre>
+<h3 id="12-gps-geoguess">1.2 ถ้าไม่มี GPS → อ่านจากภาพ (geoguess)</h3>
+<p><strong>จาก writeup 2025 — O1: Japan geography / OSINT geoguess</strong></p>
+<p>ลำดับการอ่านภาพ:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>สิ่งที่ดู</th>
+<th>บอกอะไร</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ภาษา/ป้าย</td>
+<td>ประเทศ (อักษรคันจิ + ป้ายน้ำเงิน = ญี่ปุ่น)</td>
+</tr>
+<tr>
+<td>ป้ายจราจร</td>
+<td>รูปทรง/สีเฉพาะประเทศ</td>
+</tr>
+<tr>
+<td>ป้ายทะเบียน</td>
+<td>รูปแบบ + ตัวอักษรจังหวัด</td>
+</tr>
+<tr>
+<td>ขับซ้าย/ขวา</td>
+<td>ขับซ้าย = UK, JP, TH, AU, IN...</td>
+</tr>
+<tr>
+<td>เสาไฟ/สายไฟ</td>
+<td>ญี่ปุ่นมีสายไฟเยอะและเสาไม้</td>
+</tr>
+<tr>
+<td>พืช</td>
+<td>สน/ปาล์ม/ใบไม้ผลัด</td>
+</tr>
+<tr>
+<td>สถาปัตยกรรม</td>
+<td>หลังคา หน้าต่าง วัสดุ</td>
+</tr>
+<tr>
+<td>เงา + ดวงอาทิตย์</td>
+<td>ทิศ + ครึ่งโลก (เงาสั้นเที่ยง = เขตร้อน)</td>
+</tr>
+<tr>
+<td>ป้ายร้าน/โลโก้</td>
+<td>แบรนด์ที่มีเฉพาะประเทศ</td>
+</tr>
+<tr>
+<td>ยานพาหนะ</td>
+<td>สี/รูปทรงรถเมล์ แท็กซี่</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>ขั้นตอนคิด:</strong>
+1. ระบุประเทศ (จากภาษา/ป้าย)
+2. ระบุภูมิภาค (จากพืช/อากาศ/สถาปัตยกรรม)
+3. ระบุเมือง (จาก landmark/ชื่อถนน/ป้ายร้าน)
+4. ระบุจุด (จากมุมกล้อง + Google Maps/Street View)</p>
+<h3 id="13">1.3 ค้นด้วยภาพ (ถ้ากติกาอนุญาต)</h3>
+<ul>
+<li>ใช้ <strong>Google Lens / Google Images</strong> ผ่านเบราว์เซอร์ (Approved: Chrome)</li>
+<li>⚠️ ถ้ากติกาห้ามอัปโหลดไฟล์โจทย์ ให้ค้นด้วย <strong>คำสำคัญ</strong> ที่อ่านได้จากภาพแทน</li>
+</ul>
+<h3 id="14">1.4 ตัวอย่างการตั้งคำค้น</h3>
+<pre><code>&quot;&lt;ข้อความบนป้าย&gt;&quot; &lt;ประเทศ&gt;
+&quot;&lt;ชื่อถนน&gt;&quot; street view
+&quot;&lt;โลโก้ร้าน&gt;&quot; &lt;เมือง&gt;
+</code></pre>
+<hr />
+<h2 id="2-username">2) ได้ชื่อผู้ใช้ (username) มา</h2>
+<pre><code class="language-bash"># 1) ดูว่าใช้ชื่อเดียวกันที่ไหนอีก (ค้นในเบราว์เซอร์)
+# &quot;&lt;username&gt;&quot; site:github.com
+# &quot;&lt;username&gt;&quot; site:twitter.com
+# &quot;&lt;username&gt;&quot; pastebin
+
+# 2) GitHub — มักมีอีเมลใน commit (เทคนิคที่ออกจริง)
+git clone https://github.com/&lt;user&gt;/&lt;repo&gt;
+cd &lt;repo&gt;
+git log
+git show -s --format='%ae' &lt;commit_sha&gt;
+git log --format='%ae %an %ad' --date=iso
+</code></pre>
+<p><strong>จาก writeup 2025 — OSINT github</strong>
+คำสั่งในเฉลยมีแค่:</p>
+<pre><code class="language-bash">git log
+git show -s --format='%ae' &lt;commit_sha&gt;
+# Flag: CSG_FLAG{monicahayashi9@gmail.com}
+</code></pre>
+<h3 id="21">2.1 ตรวจชื่อผู้ใช้ซ้ำหลายแพลตฟอร์ม (ทำในเบราว์เซอร์)</h3>
+<pre><code>https://github.com/&lt;username&gt;
+https://twitter.com/&lt;username&gt;
+https://www.instagram.com/&lt;username&gt;
+https://www.reddit.com/user/&lt;username&gt;
+https://&lt;username&gt;.github.io
+</code></pre>
+<hr />
+<h2 id="3">3) ได้โดเมน / เว็บไซต์มา</h2>
+<pre><code class="language-bash">whois example.com                     # เจ้าของ, วันจด, nameserver
+dig example.com ANY                   # record ทั้งหมด
+dig +short example.com MX             # เมลเซิร์ฟเวอร์
+dig +short example.com TXT            # TXT (บางทีมี flag!)
+dig +short example.com NS
+host -t ns example.com
+nslookup -type=txt example.com
+</code></pre>
+<p><strong>หา subdomain:</strong></p>
+<pre><code class="language-bash">subfinder -d example.com -silent
+# หรือไล่ด้วย ffuf
+ffuf -u http://FUZZ.example.com -w subdomains.txt -fs 0
+</code></pre>
+<p><strong>ไฟล์ที่ต้องลอง:</strong></p>
+<pre><code class="language-bash">curl -s http://example.com/robots.txt
+curl -s http://example.com/sitemap.xml
+curl -s http://example.com/.well-known/security.txt
+curl -s http://example.com/.git/HEAD
+</code></pre>
+<p><strong>Certificate Transparency</strong> (ดูว่าเคยมี subdomain อะไร):
+เปิด <code>https://crt.sh/?q=example.com</code> ในเบราว์เซอร์</p>
+<hr />
+<h2 id="4">4) ได้อีเมลมา</h2>
+<pre><code class="language-bash"># 1) ตรวจรูปแบบ + องค์กร
+# 2) Gravatar: md5 ของอีเมล -&gt; รูปโปรไฟล์
+echo -n &quot;user@example.com&quot; | md5sum
+# เปิด: https://gravatar.com/avatar/&lt;md5&gt;
+</code></pre>
+<pre><code class="language-bash"># 3) ดูว่าเคยปรากฏที่ไหน (ค้นในเบราว์เซอร์)
+&quot;user@example.com&quot;
+</code></pre>
+<blockquote>
+<p>หลีกเลี่ยงการ login/สมัครบริการด้วยอีเมลในโจทย์ — ผิดกติกาและเสี่ยง</p>
+</blockquote>
+<hr />
+<h2 id="5">5) ได้ชื่อคนมา</h2>
+<ol>
+<li>ค้น <code>"&lt;ชื่อเต็ม&gt;"</code> + ประเทศ/บริษัท</li>
+<li>ลองรูปแบบ username ที่เกิดจากชื่อ:
+   <code>name.surname / namesurname / n.surname / surname.name / name_surname</code></li>
+<li>ดูเอกสาร PDF ที่เกี่ยวข้อง (metadata มักมีชื่อผู้สร้าง)</li>
+</ol>
+<pre><code class="language-bash">exiftool document.pdf | grep -i -E 'author|creator|producer'
+pdftotext document.pdf - | head -30
+</code></pre>
+<hr />
+<h2 id="6-osint-metadata">6) ได้ไฟล์/เอกสารมา — OSINT จาก metadata</h2>
+<pre><code class="language-bash">exiftool -a -u -g1 file.jpg          # กล้อง, เวลา, โปรแกรมแก้
+exiftool file.pdf                    # Author, Creator, Producer
+olemeta file.docx                    # ชื่อผู้สร้าง Office
+strings -n 8 file.pdf | grep -i -E '@|http'
+</code></pre>
+<p><strong>จาก writeup 2025 — O1 (Japan geography) / Secret Lesson</strong>
+โจทย์แนวนี้มักให้ภาพหรือเอกสาร แล้วคำตอบอยู่ใน metadata หรือในเนื้อหา (เช่น ชื่อสถานที่, เวลา, หมายเลข)</p>
+<hr />
+<h2 id="7-google-dorking">7) Google Dorking — คำค้นที่ได้ผล</h2>
+<pre><code>site:example.com filetype:pdf
+site:example.com inurl:admin
+site:example.com ext:sql | ext:bak | ext:zip
+&quot;CSG_FLAG&quot; site:example.com
+intext:&quot;index of&quot; &quot;backup&quot;
+filetype:xlsx &quot;password&quot;
+</code></pre>
+<hr />
+<h2 id="8-osint">8) ข้อมูลที่มักเป็นคำตอบของโจทย์ OSINT</h2>
+<ul>
+<li>ชื่อ-นามสกุลเต็มของเจ้าของ</li>
+<li>อีเมล (จาก commit / metadata)</li>
+<li>พิกัดสถานที่ (จาก GPS หรือ geoguess)</li>
+<li>วันที่ (ถ่ายรูป / จดโดเมน / commit)</li>
+<li>ชื่อ Wi-Fi / ชื่อเครื่อง (จากภาพหน้าจอ)</li>
+<li>หมายเลขโทรศัพท์ / ที่อยู่บนป้าย</li>
+</ul>
+<hr />
+<h2 id="9-flag">9) บันทึกผลแบบนี้ (ช่วยมากเวลาต้องส่ง flag)</h2>
+<pre><code>เป้าหมาย      :
+เบาะแสที่เจอ   :
+แหล่งที่มา    : &lt;URL / ไฟล์&gt;
+ข้อมูลที่ได้   :
+ข้อสันนิษฐาน  :
+ขั้นต่อไป      :
+</code></pre>
+<hr />
+<h2 id="10">10) ข้อควรระวัง</h2>
+<ul>
+<li>ห้ามใช้ข้อมูลนี้ไปยุ่งกับบัญชีจริงของคนจริง</li>
+<li>อย่าอัปโหลดไฟล์โจทย์ขึ้นบริการวิเคราะห์ (VirusTotal / CrackStation ฯลฯ) — อยู่ใน Unapproved List</li>
+<li>ถ้าใช้ Google Lens/Images ให้แน่ใจว่ากติกาอนุญาต (บางสนามห้าม)</li>
+<li>เก็บ screenshot ไว้เป็นหลักฐานใน writeup</li>
+</ul>
+<div class="pager"><a class="prev" href="../Reverse/common_commands.html"><span>ก่อนหน้า</span>Reverse Commands</a><a class="next" href="../Misc/useful_commands.html"><span>ถัดไป</span>Useful Commands</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>OSINT/methodology.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

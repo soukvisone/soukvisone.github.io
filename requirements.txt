@@ -1,0 +1,102 @@
+# ==========================================================================
+#  requirements.txt — รายการเครื่องมือที่สคริปต์และเอกสารในชุดนี้ใช้
+#
+#  วิธีใช้:
+#     bash install.sh              # ติดตั้งเฉพาะ core (พอสำหรับสคริปต์ใน scripts/)
+#     bash install.sh --all        # ติดตั้งทุกอย่างรวมของในเอกสาร (กินดิสก์หลาย GB)
+#     bash install.sh --dry-run    # ดูว่าจะสั่งอะไรบ้าง ไม่ติดตั้งจริง
+#     bash scripts/check_tools.sh  # ตรวจว่ามีอะไรขาด (ไม่ติดตั้ง)
+#
+#  รูปแบบบรรทัด:  <ตัวจัดการ>  <ชื่อแพ็กเกจ>  <ตัวตรวจ>  <ระดับ>
+#     ตัวจัดการ: apt | pip | gem | skip
+#     ตัวตรวจ : apt/gem ใช้ชื่อคำสั่ง, pip ใช้ชื่อ module python, skip ใช้ชื่อคำสั่ง
+#     ระดับ   : core (จำเป็นกับสคริปต์) | extra (ของเอกสาร/ทางเลือก)
+#
+#  บรรทัดที่ขึ้นต้นด้วย # = comment (ไม่ถูกอ่าน)
+#  หมายเหตุ: ทุกอย่างติดตั้งจาก repo ทางการของ Kali/Ubuntu และ PyPI เท่านั้น
+# ==========================================================================
+
+# ---------- 1) พื้นฐาน (ทุกสคริปต์ใช้) ----------
+apt   file                        file        core
+apt   binutils                    strings     core
+apt   xxd                         xxd         core
+apt   grep                        grep        core
+apt   curl                        curl        core
+apt   python3                     python3     core
+apt   python3-pip                 pip3        core
+apt   unzip                       unzip       core
+apt   tar                         tar         core
+apt   p7zip-full                  7z          core
+apt   coreutils                   base64      core
+
+# ---------- 2) Forensics / Stego / Network ----------
+apt   libimage-exiftool-perl      exiftool    core
+apt   binwalk                     binwalk     core
+apt   foremost                    foremost    core
+apt   sleuthkit                   mmls        core
+apt   testdisk                    photorec    extra
+apt   steghide                    steghide    core
+apt   pngcheck                    pngcheck    extra
+apt   zbar-tools                  zbarimg     core
+apt   sox                         sox         core
+apt   multimon-ng                 multimon-ng extra
+apt   tshark                      tshark      core
+gem   zsteg                       zsteg       core
+
+# ---------- 3) Web ----------
+apt   ffuf                        ffuf        core
+apt   gobuster                    gobuster    core
+apt   sqlmap                      sqlmap      core
+apt   nmap                        nmap        core
+apt   hydra                       hydra       extra
+apt   feroxbuster                 feroxbuster extra
+apt   jq                          jq          core
+pip   jwt-tool                    jwt_tool    core
+
+# ---------- 4) Reverse / Binary ----------
+apt   gdb                         gdb         core
+apt   ltrace                      ltrace      core
+apt   strace                      strace      core
+apt   checksec                    checksec    core
+apt   radare2                     r2          core
+apt   upx-ucl                     upx         core
+apt   yara                        yara        extra
+apt   jadx                        jadx        extra
+apt   apktool                     apktool     extra
+pip   flare-floss                 floss       extra
+skip  pycdc                       pycdc       extra
+
+# ---------- 5) Crypto / Crack ----------
+apt   openssl                     openssl     core
+apt   john                        john        core
+apt   hashcat                     hashcat     core
+pip   hashid                      hashid      core
+pip   gmpy2                       gmpy2       extra
+pip   sympy                       sympy       extra
+skip  RsaCtfTool                  RsaCtfTool extra
+skip  sage                        sage        extra
+
+# ---------- 6) Misc / Office / Audio ----------
+apt   sqlite3                     sqlite3     core
+apt   imagemagick                 convert     core
+apt   ffmpeg                      ffmpeg      extra
+pip   oletools                    oletools    core
+apt   openstego                   openstego   extra
+skip  chainsaw                    chainsaw    extra
+skip  hayabusa                    hayabusa    extra
+pip   volatility3                 volatility3 extra
+pip   markdown                    markdown    extra
+
+# ==========================================================================
+#  หมายเหตุของรายการที่ใช้ "skip" (ติดตั้งผ่าน apt/pip ไม่ได้ ต้องโหลดเอง)
+# --------------------------------------------------------------------------
+#  pycdc        : https://github.com/zrax/pycdc  (build เอง) — ใช้ถอด .pyc
+#                 ทางเลือกที่ apt มี: apt install uncompyle6 (pip) หรือ pycdc
+#  RsaCtfTool   : git clone https://github.com/RsaCtfTool/RsaCtfTool
+#  sage         : ใหญ่ (~2 GB) — ใช้ก็ต่อเมื่อโจทย์เป็นพีชคณิตจริง ๆ
+#                 ทางเลือกเบา: pip install sympy gmpy2
+#  chainsaw     : โหลด release จาก GitHub (ใช้กับ .evtx)
+#  hayabusa     : โหลด release จาก GitHub (ใช้กับ .evtx)
+#
+#  ตรวจหลังติดตั้ง:  bash scripts/check_tools.sh
+# ==========================================================================

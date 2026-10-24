@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>strings · Personal Notes</title>
+<meta name="description" content="ขุดข้อความในไบนารี: UTF-16, base64 ในไฟล์, FLOSS, ripgrep">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html">
+      <span class="logo">PN</span>
+      <span><b>Personal Notes</b><small>Cheat sheets · Automation · Tools</small></span>
+    </a>
+    <nav class="nav">
+<a href="../index.html"><span class="ico">🏠</span> หน้าแรก</a>
+<div class="nav-group">
+<div class="label">📌 เริ่มต้น</div>
+<a class="sub" href="../README.html">ภาพรวมทั้งหมด</a>
+</div>
+<div class="nav-group">
+<div class="label">🚀 Automation</div>
+<a class="sub" href="../Automation/automation_guide.html">Automation — หา Flag ด้วยคำสั่งเดียว</a>
+</div>
+<div class="nav-group">
+<div class="label">🔐 Crypto</div>
+<a class="sub" href="../Crypto/crypto_cheatsheet.html">Crypto Cheatsheet</a>
+</div>
+<div class="nav-group">
+<div class="label">🧪 Forensics</div>
+<a class="sub" href="../Forensics/file_signatures.html">File Signatures</a>
+<a class="sub" href="../Forensics/binwalk_commands.html">binwalk &amp; Carving</a>
+<a class="sub active" href="../Forensics/strings_commands.html">strings</a>
+<a class="sub" href="../Forensics/metadata.html">Metadata</a>
+</div>
+<div class="nav-group">
+<div class="label">🌐 Web</div>
+<a class="sub" href="../Web/web_cheatsheet.html">Web Cheatsheet</a>
+<a class="sub" href="../Web/common_payloads.html">Common Payloads</a>
+<a class="sub" href="../Web/commands.html">Web Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🧩 Reverse</div>
+<a class="sub" href="../Reverse/reversing_notes.html">Reversing Notes</a>
+<a class="sub" href="../Reverse/common_commands.html">Reverse Commands</a>
+</div>
+<div class="nav-group">
+<div class="label">🔍 OSINT</div>
+<a class="sub" href="../OSINT/methodology.html">OSINT Methodology</a>
+</div>
+<div class="nav-group">
+<div class="label">🧰 Misc</div>
+<a class="sub" href="../Misc/useful_commands.html">Useful Commands</a>
+</div>
+<div class="nav-group"><div class="label">🔎 ค้นหา</div><a class="sub" href="../tools.html">Tools Index</a><a class="sub" href="../index.html#search">ค้นหาทั้งหมด</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="เมนู">☰</button>
+      <div class="crumb">🧪 Forensics / <b>strings</b></div>
+      <button class="icon-btn" id="theme-btn" aria-label="ธีม">🌙</button>
+    </header>
+    <main class="content">
+<div class="toolrow"><a href="../tools.html#strings">strings</a><a href="../tools.html#floss">FLOSS</a><a href="../tools.html#ripgrep">ripgrep</a><a href="../tools.html#xxd">xxd</a></div>
+<h1 id="strings">strings — ขุดข้อความที่ซ่อนในไฟล์ไบนารี</h1>
+<blockquote>
+<p>ใช้เมื่อ: ไฟล์เปิดไม่ได้ / เป็นไบนารี / สงสัยว่ามีข้อความฝังอยู่
+เครื่องมือ: <code>strings</code>, <code>ripgrep (rg)</code>, <code>FLOSS</code>, <code>xxd</code>, <code>grep</code></p>
+</blockquote>
+<p><strong>strings คือเครื่องมือที่คุ้มที่สุดในสนาม CTF</strong> — หลายโจทย์เฉลยได้ใน 5 วินาทีด้วยคำสั่งเดียว</p>
+<hr />
+<h2 id="1">1) คำสั่งพื้นฐานที่ต้องใช้เป็น</h2>
+<pre><code class="language-bash">strings file.bin                 # ข้อความยาว &gt;= 4 ตัวอักษร
+strings -n 6 file.bin            # ยาว &gt;= 6 (ตัด noise ออก)
+strings -n 8 file.bin            # ยาว &gt;= 8 (สำหรับไฟล์ใหญ่ ๆ)
+strings -t x file.bin            # บอก offset (hex) ของแต่ละบรรทัด
+strings -a file.bin              # สแกนทั้งไฟล์ (ไม่ข้ามส่วนหัว)
+</code></pre>
+<p><strong>กรองเอาแต่ที่น่าสนใจ:</strong></p>
+<pre><code class="language-bash">strings -n 6 file.bin | grep -i -E 'csg|flag|pass|secret|key|admin|token'
+</code></pre>
+<hr />
+<h2 id="2">2) ตัวเลือกที่คนมักลืม (แต่สำคัญมาก)</h2>
+<h3 id="21-utf-16-windows-net-powershell">2.1 ข้อความ UTF-16 (ไฟล์ Windows / .NET / PowerShell)</h3>
+<p>Windows เก็บข้อความเป็น 2 ไบต์ต่อตัวอักษร → <code>strings</code> ปกติ <strong>มองไม่เห็น</strong></p>
+<pre><code class="language-bash">strings -el file.exe | grep -i flag        # little-endian 16-bit (ที่ใช้บ่อยสุด)
+strings -eb file.exe | grep -i flag        # big-endian 16-bit
+</code></pre>
+<p><strong>จาก writeup — Reversing (PE/.NET)</strong>
+ถ้า <code>strings file.exe</code> ไม่เจออะไรเลย ให้ลอง <code>strings -el</code> ก่อนสรุปว่าไม่มี</p>
+<h3 id="22-newline">2.2 ข้อความที่ติดกันเป็นพืด (ไม่มี newline)</h3>
+<pre><code class="language-bash">strings -n 20 file.bin | fold -w 100 | grep -i csg
+</code></pre>
+<h3 id="23-offset">2.3 ดู offset เพื่อไปแก้ไฟล์ต่อ</h3>
+<pre><code class="language-bash">strings -t x file.bin | grep -i 'CSG'
+# 0001a2b0 CSG_FLAG{...
+xxd -s 0x1a2b0 -l 128 file.bin
+</code></pre>
+<hr />
+<h2 id="3">3) สูตรสำเร็จที่ใช้บ่อยในสนาม</h2>
+<h3 id="31-flag">3.1 หา flag ตรง ๆ</h3>
+<pre><code class="language-bash">strings -n 6 * 2&gt;/dev/null | grep -o 'CSG_FLAG{[^}]*}' | sort -u
+</code></pre>
+<h3 id="32-flag">3.2 หา flag ที่ถูกแบ่งเป็นส่วน ๆ</h3>
+<p>โจทย์บางข้อตัด flag เป็น 3 ท่อนแล้วซ่อนคนละที่</p>
+<pre><code class="language-bash">strings -n 6 file.bin | grep -i -E 'csg|flag|\{|\}' -A2 -B2
+</code></pre>
+<h3 id="33-base64">3.3 หา base64 ที่ซ่อนอยู่ แล้วถอดทันที</h3>
+<pre><code class="language-bash">strings -n 20 file.bin | grep -E '^[A-Za-z0-9+/]{20,}={0,2}$' | while read -r b; do
+  d=$(printf '%s' &quot;$b&quot; | base64 -d 2&gt;/dev/null)
+  printf '%s' &quot;$d&quot; | grep -q 'CSG_FLAG' &amp;&amp; echo &quot;[$b] -&gt; $d&quot;
+done
+</code></pre>
+<h3 id="34-key-memory-dump">3.4 ดึง key/รหัสผ่านจาก memory dump (เทคนิคจาก )</h3>
+<p><strong>จาก writeup 2024 — ข้อ memory forensics</strong>
+คำสั่งที่เฉลยใช้จริง:</p>
+<pre><code class="language-bash">strings 4960.dmp | grep SECRET &gt; tlskey.log
+</code></pre>
+<p>ใช้หัก <strong>TLS session key</strong> จาก memory dump เพื่อถอด HTTPS ใน Wireshark
+(ใน Wireshark: <code>Preferences → Protocols → TLS → (Pre)-Master-Secret log filename</code>)</p>
+<h3 id="35-path">3.5 หา path/ชื่อไฟล์ที่โปรแกรมเข้าถึง</h3>
+<pre><code class="language-bash">strings -n 6 sample.exe | grep -E '^[A-Za-z]:\\|^/|\.txt|\.dll|\.exe|\.php'
+</code></pre>
+<h3 id="36-url-ip-malware-c2">3.6 หา URL / IP (โจทย์ malware C2)</h3>
+<pre><code class="language-bash">strings -n 6 sample.exe | grep -E 'https?://|[0-9]{1,3}(\.[0-9]{1,3}){3}|\.onion'
+</code></pre>
+<hr />
+<h2 id="4-strings-floss">4) เมื่อ strings ไม่พอ — FLOSS</h2>
+<p>มัลแวร์ชอบซ่อนข้อความแบบ "ประกอบกลับตอนรัน" (XOR/base64 ในโค้ด) → <code>strings</code> เห็นแต่ขยะ</p>
+<pre><code class="language-bash">floss sample.exe                 # ดึงทั้ง static + decoded strings
+floss -q sample.exe | grep -i csg
+</code></pre>
+<p>FLOSS อยู่ใน Approved List (<code>pipx flare-floss</code>) — ใช้แทนการรันมัลแวร์จริงได้ปลอดภัยกว่า</p>
+<hr />
+<h2 id="5-ripgrep-grep">5) ripgrep — เร็วกว่า grep สำหรับสแกนทั้งโฟลเดอร์</h2>
+<pre><code class="language-bash">rg -a -o 'CSG_FLAG\{[^}]*\}' .            # -a = มองเป็น text
+rg -a -i 'flag|csg' --max-count 5 .
+rg -a -l 'CSG_FLAG' .                     # เอาแค่ชื่อไฟล์ที่เจอ
+</code></pre>
+<hr />
+<h2 id="6-strings">6) ข้อจำกัดของ strings (ต้องรู้ไว้จะได้ไม่เสียเวลา)</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>สถานการณ์</th>
+<th>strings เห็นไหม</th>
+<th>ต้องใช้อะไรแทน</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ข้อความธรรมดา ASCII</td>
+<td>เห็น</td>
+<td>—</td>
+</tr>
+<tr>
+<td>UTF-16 (Windows)</td>
+<td>ไม่เห็น</td>
+<td><code>strings -el</code></td>
+</tr>
+<tr>
+<td>ข้อมูลถูก gzip/zip</td>
+<td>ไม่เห็น</td>
+<td><code>binwalk -e</code>, <code>gunzip</code></td>
+</tr>
+<tr>
+<td>ข้อมูลถูก XOR</td>
+<td>เห็นแต่ขยะ</td>
+<td><code>../Crypto/crypto_cheatsheet.md</code> (XOR)</td>
+</tr>
+<tr>
+<td>ข้อความถูกสร้างตอนรัน</td>
+<td>ไม่เห็น</td>
+<td><code>FLOSS</code>, <code>ltrace</code>, <code>gdb</code></td>
+</tr>
+<tr>
+<td>ข้อความอยู่ในรูป (LSB)</td>
+<td>ไม่เห็น</td>
+<td><code>zsteg</code>, <code>StegSolve</code>, <code>OpenStego</code></td>
+</tr>
+<tr>
+<td>ข้อความใน PDF stream (บีบอัด)</td>
+<td>ไม่เห็น</td>
+<td><code>mutool clean -d</code>, <code>qpdf --qdf</code></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="7">7) รวมคำสั่งที่ควรพิมพ์ก่อนคิดอะไรซับซ้อน</h2>
+<pre><code class="language-bash">f=challenge.bin
+
+file &quot;$f&quot;                                   # 1. มันคืออะไร
+strings -n 6 &quot;$f&quot; | head -50                # 2. มีข้อความอะไร
+strings -n 6 &quot;$f&quot; | grep -i -E 'csg|flag'   # 3. มี flag ไหม
+strings -el &quot;$f&quot; | grep -i -E 'csg|flag'    # 4. มีแบบ UTF-16 ไหม
+binwalk &quot;$f&quot; | head                          # 5. มีไฟล์อื่นซ่อนไหม
+xxd -l 64 &quot;$f&quot;                               # 6. header เป็นอะไร
+</code></pre>
+<p>ถ้าทั้ง 6 ข้อไม่เจอ → ไปหมวดอื่น (<code>../Reverse/</code>, <code>../Crypto/</code>, <code>../Misc/</code>)</p>
+<hr />
+<h2 id="8">8) เคล็ดลับจากสนาม</h2>
+<ol>
+<li><strong><code>strings | grep</code> คือคำสั่งแรกของการแข่งทุกครั้ง</strong> — เร็วกว่าเปิด Ghidra</li>
+<li>ถ้าเจอข้อความยาว ๆ ที่ดูเหมือน base64 ให้ <code>| base64 -d</code> ต่อทันที</li>
+<li>ถ้าเจอ flag ที่ขาด <code>}</code> ให้ดูบรรทัดถัดไป (บางทีตัดเพราะมีอักขระพิเศษคั่น)</li>
+<li>ไฟล์ <code>.dmp</code>, <code>.raw</code>, <code>.vmem</code> → <code>strings</code> ได้เลยแม้ไม่ใช้ Volatility</li>
+<li><code>strings</code> บนไฟล์ 100 MB ใช้เวลาเป็นนาที → ใส่ <code>-n 8</code> เพื่อเร็วขึ้น</li>
+</ol>
+<div class="pager"><a class="prev" href="../Forensics/binwalk_commands.html"><span>ก่อนหน้า</span>binwalk &amp; Carving</a><a class="next" href="../Forensics/metadata.html"><span>ถัดไป</span>Metadata</a></div>
+      <div class="footer">แก้ไขเนื้อหาได้ที่ไฟล์ <code>Forensics/strings_commands.md</code> แล้วรัน <code>python3 build.py</code> ใหม่ · หน้านี้สร้างแบบ static ไม่ต้องต่อเน็ต</div>
+    </main>
+  </div>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>
